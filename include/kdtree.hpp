@@ -11,7 +11,7 @@ namespace particle_filter {
 /**
  *  @todo 1. add tree iterator
  */
-template <std::size_t Dimension, typename Point, typename ValueComp>
+template <typename Point, typename ValueComp>
 class KDTree {
   using ValueType = Point;
 
@@ -19,6 +19,7 @@ class KDTree {
   class Node {
     friend class KDTree;
 
+    Node* parent_ = nullptr;
     std::array<std::unique_ptr<Node>, 2> child_node_;
 
     ValueType pt_;
@@ -27,7 +28,7 @@ class KDTree {
     std::size_t depth_ = 0;
 
     Node* insert(KDTree* const t_base, ValueType const& t_pt) noexcept {
-      if (this->is_leaf() and this->pt_ == t_pt) {
+      if (/*this->is_leaf() and*/ this->pt_ == t_pt) {
         this->pt_.update(t_pt);
         return nullptr;
       }
@@ -38,8 +39,9 @@ class KDTree {
       }
 
       t_base->leaf_count_ += static_cast<std::size_t>(not this->is_leaf());
-      node_to_operate         = std::make_unique<Node>(t_pt, this->pt_comp_);
-      node_to_operate->depth_ = this->depth_ + 1;
+      node_to_operate          = std::make_unique<Node>(t_pt, this->pt_comp_);
+      node_to_operate->parent_ = this;
+      node_to_operate->depth_  = this->depth_ + 1;
       return node_to_operate.get();
     }
 
@@ -54,6 +56,62 @@ class KDTree {
       return this->child_node_[0] == nullptr and this->child_node_[1] == nullptr;
     }
   };
+
+  // in-order
+  class KDTreeIterator : public std::iterator<std::bidirectional_iterator_tag, Node> {
+    friend class KDTree;
+
+    KDTree const* tree_;
+    Node const* current_;
+
+    KDTreeIterator(KDTree const* t_tree, Node const* t_current = nullptr) : tree_(t_tree), current_(t_current) {}
+
+   public:
+    [[nodiscard]] bool operator==(KDTreeIterator const& t_rhs) const { return this->current_ == t_rhs.current_; }
+
+    [[nodiscard]] bool operator!=(KDTreeIterator const& t_rhs) const { return this->current_ != t_rhs.current_; }
+
+    [[nodiscard]] Node const& operator*() const { return *this->current_; }
+
+    KDTreeIterator& operator++() {
+      if (this->current_->child_node_[1] != nullptr) {
+        this->current_ = this->current_->child_node_[1].get();
+        while (this->current_->child_node_[0] != nullptr) {
+          this->current_ = this->current_->child_node_[0].get();
+        }
+      } else {
+        auto parent = this->current_->parent_;
+        while (parent != nullptr and this->current_ == parent->child_node_[1].get()) {
+          this->current_ = parent;
+          parent         = parent->parent_;
+        }
+
+        this->current_ = parent;
+      }
+
+      return *this;
+    }
+
+    KDTreeIterator& operator--() {
+      if (this->current_->child_node_[0] != nullptr) {
+        this->current_ = this->current_->child_node_[0].get();
+      } else {
+        auto parent = this->current_->parent_;
+        while (parent != nullptr and this->current_ != parent->child_node_[1].get()) {
+          this->current_ = parent;
+          parent         = parent->parent_;
+        }
+
+        this->current_ = parent;
+      }
+
+      return *this;
+    }
+  };
+
+  KDTreeIterator begin() { return KDTreeIterator(this, this->get_left_most()); }
+
+  KDTreeIterator end() { return KDTreeIterator(this); }
 
   void clear() {
     this->root_.reset();
@@ -95,6 +153,15 @@ class KDTree {
   explicit KDTree(ValueComp t_cmp = {}) : pt_cmp_(t_cmp) {}
 
  private:
+  Node* get_left_most() const noexcept {
+    Node* ret_val = this->root_.get();
+    while (ret_val != nullptr and not ret_val->is_leaf()) {
+      ret_val = ret_val->child_node_[0].get();
+    }
+
+    return ret_val;
+  }
+
   std::size_t size_       = 0;
   std::size_t leaf_count_ = 0;
   ValueComp pt_cmp_;

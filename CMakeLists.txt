@@ -21,7 +21,7 @@ configure_project_option(
   IPO
     DISABLE_FOR_CONFIG Debug Coverage
   PROJ_TARGET
-    TARGET amclpp
+    TARGET epf
 )
 # cmake-format: on
 

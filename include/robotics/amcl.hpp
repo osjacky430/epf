@@ -28,7 +28,7 @@ class KLDSampling {
   std::size_t max_particle_count_;
 
   /* !< Data structure to store histogram */
-  particle_filter::KDTree<ParticleType::Dimension, ParticleType, typename ParticleType::PivotComp> kdtree_;
+  particle_filter::KDTree<ParticleType, typename ParticleType::PivotComp> kdtree_;
 
  public:
   [[nodiscard]] std::size_t max_particle() const noexcept { return this->max_particle_count_; }
