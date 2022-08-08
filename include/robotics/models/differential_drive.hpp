@@ -1,12 +1,12 @@
 #ifndef DIFFERENTIAL_DRIVE_HPP_
 #define DIFFERENTIAL_DRIVE_HPP_
 
-#include "motion_model.hpp"
+#include "core/process.hpp"
 
-namespace particle_filter {
+namespace epf {
 
 template <typename ParticleType>
-struct Differential final : public MotionModel<ParticleType> {
+struct Differential final : public ProcessModel<ParticleType> {
   std::mt19937 rng_ = std::mt19937(std::random_device()());
 
   ParticleType previous_{};
@@ -15,11 +15,11 @@ struct Differential final : public MotionModel<ParticleType> {
 
   // differential drive model is aware of 2D space only, therefore it is safe to assume
   // particle type can be accessed via index operator, with size = 3 (x, y, yaw angle)
-  [[nodiscard]] UpdateStatus update_motion(std::vector<ParticleType>& t_particles) override {
+  [[nodiscard]] Prediction predict(std::vector<ParticleType>& t_particles) override {
     ParticleType current_odom_meas{};  // its motion model's responsibility to get odom measurement
     auto const diff = current_odom_meas - this->previous_;
     if (diff[0] < 1e-6) {  //  some threshold, make it a user adjustable param
-      return UpdateStatus::NoUpdate;
+      return Prediction::NoUpdate;
     }
 
     double const delta_rot1  = std::atan2(diff[1], diff[0]) - this->previous_[2];
@@ -48,10 +48,10 @@ struct Differential final : public MotionModel<ParticleType> {
     std::for_each(t_particles.begin(), t_particles.end(), esitmate_per_particle);
     this->previous_ = current_odom_meas;
 
-    return UpdateStatus::Updated;
+    return Prediction::Updated;
   }
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

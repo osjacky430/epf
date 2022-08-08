@@ -1,34 +1,39 @@
 #ifndef AMCL_HPP_
 #define AMCL_HPP_
 
+#include "core/measurement.hpp"
 #include "kdtree.hpp"
 #include "map.hpp"
 #include "particle_filter.hpp"
-#include "sensor_model.hpp"
+
 #include <boost/math/special_functions.hpp>
 
 namespace amcl {
 
 template <typename ParticleType>
 class KLDSampling {
-  static constexpr auto DEFAULT_EPSILON        = 0.01;
-  static constexpr auto DEFAULT_UPPER_QUANTILE = 3;
-
   ParticleType bin_size_;  // shouldn't be particle size, eigen::array<x>
-  double epsilon_;         /* !< Maximum allowed error (K-L distance) between true and estimated distribution */
+
+  static constexpr auto DEFAULT_EPSILON = 0.01;
+
+  /* !< Maximum allowed error (K-L distance) between true and estimated distribution */
+  double epsilon_ = DEFAULT_EPSILON;
 
   // according to standard normal distribution wikipedia. A normal random variable X will exceed mu + z_{1-p} * sigma
   // with probability p (i.e. within mu + z_{1-p} with probability 1 - p), and will lie outside the interval [mu -
   // z_{1-p} * sigma, mu + z_{1-p} * sigma] with the probability 2 * p. (p is changed to 1 - p to match the notation
-  // used in the paper)
-  double upper_quantile_; /* !< z_{1-p}, upper quantile of standard normal distribution N(0, 1). where 1 - p is the
-                      probability that K-L distance between MLE and the true distribution is smaller than epsilon */
+  // used in the paper), default upper quantile = 3 corresponds to p = 0.001, i.e. 1 - p = 0.999
+  static constexpr auto DEFAULT_UPPER_QUANTILE = 3;
 
-  std::size_t min_particle_count_;
-  std::size_t max_particle_count_;
+  /* !< z_{1-p}, upper quantile of standard normal distribution N(0, 1). where 1 - p is the probability that K-L
+   *    distance between MLE and the true distribution is smaller than epsilon */
+  double upper_quantile_ = DEFAULT_UPPER_QUANTILE;
+
+  std::size_t min_particle_count_{};
+  std::size_t max_particle_count_{};
 
   /* !< Data structure to store histogram */
-  particle_filter::KDTree<ParticleType, typename ParticleType::PivotComp> kdtree_;
+  epf::KDTree<ParticleType, typename ParticleType::PivotComp> kdtree_;
 
  public:
   [[nodiscard]] std::size_t max_particle() const noexcept { return this->max_particle_count_; }
@@ -103,11 +108,13 @@ class AMCLResample : ParticleSizeStrategy<ParticleType> {
 
   explicit AMCLResample(double const t_alpha_slow = DEFAULT_ALPHA_SLOW,
                         double const t_alpha_fast = DEFAULT_ALPHA_FAST) noexcept
-    : alpha_slow_(t_alpha_slow), alpha_fast_(t_alpha_fast) {}
+    : alpha_slow_(t_alpha_slow), alpha_fast_(t_alpha_fast) {
+    assert(t_alpha_fast / t_alpha_slow >= 100.0);
+  }
 
-  std::vector<ParticleType> resample(particle_filter::SensorModel<ParticleType>* const t_sensor,
+  std::vector<ParticleType> resample(epf::MeasurementModel<ParticleType>* const t_sensor,
                                      std::vector<ParticleType> const& t_previous_particles,
-                                     particle_filter::MapBase<ParticleType> const& t_map) noexcept {
+                                     epf::MapBase<ParticleType> const& t_map) noexcept {
     auto const sum_weight = [](auto&& t_value, auto&& t_particles) { return t_value + t_particles.weight(); };
     auto const w_sum      = std::accumulate(t_previous_particles.begin(), t_previous_particles.end(), 0.0, sum_weight);
     auto const w_avg      = w_sum / static_cast<double>(t_previous_particles.size());
@@ -168,30 +175,30 @@ class AMCLResample : ParticleSizeStrategy<ParticleType> {
 };
 
 template <typename ParticleType, typename Resampler = AMCLResample<ParticleType>>
-class AMCL2D final : public particle_filter::ParticleFilter<ParticleType, Resampler> {
+class AMCL2D final : public epf::ParticleFilter<ParticleType, Resampler> {
  private:
   std::vector<ParticleType> previous_particles_{};
 
-  using PF = particle_filter::ParticleFilter<ParticleType, Resampler>;
+  using PF = epf::ParticleFilter<ParticleType, Resampler>;
 
  public:
   explicit AMCL2D(std::size_t t_max_particles = PF::DEFAULT_MAX_PARTICLE_COUNTS)
     : previous_particles_(t_max_particles, ParticleType({0, 0, 0}, 1.0 / static_cast<double>(t_max_particles))) {}
 
-  ParticleType sample(particle_filter::MapBase<ParticleType>& t_map) noexcept override {
+  ParticleType sample(epf::MapBase<ParticleType>& t_map) noexcept override {
     for (auto& sensor : this->get_all_sensors()) {
       // When the robot stopped, resampling should be suspended (and in fact it is usually a good idea to suspend the
       // integration of measurements as well). If we clearly know that the robot doesn't move at all, then the diversity
       // of the particles should remain the same (what remains unknown should still be unknown), resampling process
       // induces the loss of diversity, even though the variance of particle set decreases, the variance of the particle
       // set as an estimator of TRUE belief increases.
-      if (auto status = this->get_motion_model()->update_motion(this->previous_particles_);
-          status == particle_filter::UpdateStatus::NoUpdate) {
+      if (auto status = this->get_motion_model()->predict(this->previous_particles_);
+          status == epf::Prediction::NoUpdate) {
         continue;
       }
 
       auto const estimate_result = sensor->estimate(this->previous_particles_, t_map);
-      if (estimate_result == particle_filter::SensorResult::NoMeasurement) {  // no valid estimation yet
+      if (estimate_result == epf::MeasurementResult::NoMeasurement) {  // no valid estimation yet
         continue;
       }
 

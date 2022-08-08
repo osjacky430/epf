@@ -1,22 +1,27 @@
 #ifndef LASER_BEAM_HPP_
 #define LASER_BEAM_HPP_
 
-#include "sensor_model.hpp"
+#include "core/measurement.hpp"
+#include "robotics/particle.hpp"
 
 #include <boost/math/constants/constants.hpp>
+#include <optional>
 #include <random>
 
-namespace particle_filter {
+namespace epf {
 
 /**
  *  @brief  Concrete implementation of sensor_model, modelling laser range finders (2D)
  */
 template <typename MeasurementType, typename ParticleType>
-class LaserBeamModel final : public SensorModel<ParticleType> {
+class LaserBeamModel final : public MeasurementModel<ParticleType> {
+  Measurement<MeasurementType>* sensor_ = nullptr;
   MeasurementType latest_measurement_;
+
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
-  typename ParticleType::ValueType laser_pose_{}; /*!< Laser position relative to the robot, we assumed that
-                                                     ParticleType::ValueType has the meaning of "pose" */
+
+  /*!< Laser position relative to the robot, we assumed that ParticleType::ValueType has the meaning of "pose" */
+  typename /* traits::coordinate_type<ParticleType>::type */ ParticleType::ValueType laser_pose_{};
   double max_range_ = 0.0;
 
   double z_hit_     = 0.0; /*!< Correct range with local measurement noise */
@@ -35,11 +40,14 @@ class LaserBeamModel final : public SensorModel<ParticleType> {
    *  @brief
    *
    */
-  SensorResult estimate(std::vector<ParticleType>& t_particles,
-                        particle_filter::MapBase<ParticleType>& t_map) override {
-    // future, promise?
-    MeasurementType income_meas; /* it is sensor's reponsibility to obtain its measurement, and to determine whether to
-                                    update or not */
+  MeasurementResult estimate(std::vector<ParticleType>& t_particles, epf::MapBase<ParticleType>& t_map) override {
+    auto result = this->sensor_->get_measurement();
+    if (result == std::nullopt or *result == this->latest_measurement_) {
+      return MeasurementResult::NoMeasurement;
+    }
+
+    MeasurementType income_meas = *result;
+
     double weight_sum = 0.0;
     for (auto& particle : t_particles) {
       double estimated_weight = 1.0;
@@ -77,8 +85,8 @@ class LaserBeamModel final : public SensorModel<ParticleType> {
       weight_sum += particle.weight();
     }
 
-    this->latest_measurement_ = income_meas;
-    return SensorResult::Estimated;
+    this->latest_measurement_ = income_meas; /* std::move(income_meas) */
+    return MeasurementResult::Estimated;
   }
 
   /**
@@ -87,11 +95,12 @@ class LaserBeamModel final : public SensorModel<ParticleType> {
   ParticleType sample_pose_from_latest_measurement(MapBase<ParticleType> const& t_map) override {
     static constexpr auto pi = boost::math::constants::pi<double>();
 
-    // this is wrong (because it assumes 2d case)
     auto const& free_cells = t_map.get_free_cells();
     auto const rng_idx     = std::uniform_int_distribution<std::size_t>(0, free_cells.size())(this->rng_);
     auto const free_cell   = free_cells[rng_idx];
-    auto const rng_angle   = std::uniform_real_distribution<>(-pi, pi)(this->rng_);
+
+    // this is wrong (because it assumes 2d case)
+    auto const rng_angle = std::uniform_real_distribution<>(-pi, pi)(this->rng_);
     ParticleType particle{{free_cell[0], free_cell[1], rng_angle}};
 
     auto const laser_pose = particle.value().transform_coordinate(this->laser_pose_);  // find laser position in map
@@ -121,6 +130,6 @@ class LaserBeamModel final : public SensorModel<ParticleType> {
   }
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

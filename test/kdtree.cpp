@@ -50,7 +50,7 @@ struct ExpectedValue {
   std::size_t leaves;
 };
 
-void test_insertion(particle_filter::KDTree<Point, PointComp>& t_tree, Point const& t_pt, ExpectedValue t_v) {
+void test_insertion(epf::KDTree<Point, PointComp>& t_tree, Point const& t_pt, ExpectedValue t_v) {
   t_tree.insert(t_pt);
   auto const* const node = t_tree.find_node(t_pt);
 
@@ -62,7 +62,7 @@ void test_insertion(particle_filter::KDTree<Point, PointComp>& t_tree, Point con
 }
 
 TEST(KDTree, insertion) {
-  particle_filter::KDTree<Point, PointComp> tree;
+  epf::KDTree<Point, PointComp> tree;
 
   std::vector<std::pair<Point, ExpectedValue>> const test_sets{
     std::make_pair(Point{{1.0, 1.0, 0.0}}, ExpectedValue{0, 1, 1}),
@@ -77,7 +77,7 @@ TEST(KDTree, insertion) {
 }
 
 TEST(KDTree, update) {
-  particle_filter::KDTree<Point, PointComp> tree;
+  epf::KDTree<Point, PointComp> tree;
 
   // TODO: RNG to generate random weight
   auto pt_to_insert = Point{{1.0, 1.0, 0.0}};
@@ -110,6 +110,6 @@ TEST(KDTree, update) {
 }
 
 TEST(KDTree, in_order_traverse) {
-  particle_filter::KDTree<Point, PointComp> tree;
+  epf::KDTree<Point, PointComp> tree;
   std::for_each(tree.begin(), tree.end(), [](auto const& /**/) { /* do nothing */ });
 }

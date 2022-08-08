@@ -3,7 +3,7 @@
 
 #include <array>
 
-namespace particle_filter {
+namespace epf {
 
 // 1. How to represent a PDF?
 // 2. Should we consider extensibilty for different PDF (Yes, probably)
@@ -23,6 +23,6 @@ class ProbabilityDensityFunction {
   /* mean return type */ void sample() noexcept;
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

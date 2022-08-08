@@ -8,7 +8,7 @@
 
 namespace demo {
 
-struct World : particle_filter::MapBase {
+struct World : epf::MapBase {
   double width_;
   double length_;
   double resolution_;

@@ -6,7 +6,11 @@
 #include <memory>
 #include <vector>
 
-namespace particle_filter {
+namespace epf {
+
+enum class Iteratation {
+  InOrder,
+};
 
 /**
  *  @todo 1. add tree iterator
@@ -64,7 +68,8 @@ class KDTree {
     KDTree const* tree_;
     Node const* current_;
 
-    KDTreeIterator(KDTree const* t_tree, Node const* t_current = nullptr) : tree_(t_tree), current_(t_current) {}
+    explicit KDTreeIterator(KDTree const* t_tree, Node const* t_current = nullptr)
+      : tree_(t_tree), current_(t_current) {}
 
    public:
     [[nodiscard]] bool operator==(KDTreeIterator const& t_rhs) const { return this->current_ == t_rhs.current_; }
@@ -169,6 +174,6 @@ class KDTree {
   std::unique_ptr<Node> root_{};
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

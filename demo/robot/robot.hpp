@@ -13,7 +13,7 @@ struct LaserRanger2D {
   double range_;
   double angle_;
 
-  std::vector<double> generate_measurement(particle_filter::MapBase const& t_map, std::array<double, 3> const& t_pose) {
+  std::vector<double> generate_measurement(epf::MapBase const& t_map, std::array<double, 3> const& t_pose) {
     //
   }
 };

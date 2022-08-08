@@ -1,10 +1,10 @@
-#ifndef PARTICLE_FILTER_HPP_
-#define PARTICLE_FILTER_HPP_
+#ifndef epf_HPP_
+#define epf_HPP_
 
 #include "kdtree.hpp"
 
-#include "motion_model.hpp"
-#include "sensor_model.hpp"
+#include "core/measurement.hpp"
+#include "core/process.hpp"
 
 #include <algorithm>
 #include <array>
@@ -14,7 +14,7 @@
 #include <random>
 #include <vector>
 
-namespace particle_filter {
+namespace epf {
 
 struct PivotComp;
 
@@ -203,11 +203,11 @@ class ParticleFilter : ResampleStrategy {
 
   virtual ~ParticleFilter() = default;
 
-  virtual ParticleType sample(particle_filter::MapBase<ParticleType>& t_map) noexcept = 0;
+  virtual ParticleType sample(epf::MapBase<ParticleType>& t_map) noexcept = 0;
 
-  template <typename Sensor, typename... InitArg>
+  template <typename Measurement, typename... InitArg>
   void add_sensor(InitArg&&... args) noexcept {
-    this->sensors_.push_back(std::make_shared<Sensor>(std::forward<InitArg>(args)...));
+    this->sensors_.push_back(std::make_shared<Measurement>(std::forward<InitArg>(args)...));
   }
 
   template <typename Motion, typename... InitArg>
@@ -216,10 +216,10 @@ class ParticleFilter : ResampleStrategy {
   }
 
  private:
-  std::unique_ptr<MotionModel<ParticleType>> motion_{};
-  std::vector<std::shared_ptr<SensorModel<ParticleType>>> sensors_{};  // TODO: change to unique_ptr
+  std::unique_ptr<ProcessModel<ParticleType>> motion_{};
+  std::vector<std::shared_ptr<MeasurementModel<ParticleType>>> sensors_{};  // TODO: change to unique_ptr
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

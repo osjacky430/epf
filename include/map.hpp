@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-namespace particle_filter {
+namespace epf {
 
 template <typename ParticleType>
 struct MapBase {
@@ -32,6 +32,6 @@ struct MapBase {
   [[nodiscard]] virtual bool is_free_cell(ParticleType const& /**/) const noexcept { return true; }
 };
 
-}  // namespace particle_filter
+}  // namespace epf
 
 #endif

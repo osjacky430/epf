@@ -43,6 +43,10 @@ class Pose {
 
 struct LaserBeamMeas {
   std::vector<std::pair<double, double>> raw_measurements_;
+
+  [[nodiscard]] bool operator!=(LaserBeamMeas const& t_rhs) const noexcept {
+    return this->raw_measurements_ != t_rhs.raw_measurements_;
+  }
 };
 
 struct Cell {
@@ -50,7 +54,7 @@ struct Cell {
 };
 
 template <typename CellType, typename ParticleType>
-class Map : public particle_filter::MapBase<ParticleType> {
+class Map : public epf::MapBase<ParticleType> {
  public:
   using MapData = std::vector<CellType>;
 
@@ -64,14 +68,14 @@ class Map : public particle_filter::MapBase<ParticleType> {
   MapData content_;
 };
 
-using PoseParticle = particle_filter::ParticleAdapter<Pose>;
+using PoseParticle = epf::ParticleAdapter<Pose>;
 
 int main(int /*argc*/, char** /*argv*/) {
   amcl::AMCL2D<PoseParticle> p;
 
   Map<Cell, PoseParticle> m;
-  p.add_sensor<particle_filter::LaserBeamModel<LaserBeamMeas, PoseParticle>>();
-  p.set_motion_model<particle_filter::Differential<PoseParticle>>();
+  p.add_sensor<epf::LaserBeamModel<LaserBeamMeas, PoseParticle>>();
+  p.set_motion_model<epf::Differential<PoseParticle>>();
 
   // while (true) {
   p.sample(m);

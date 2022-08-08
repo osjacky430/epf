@@ -3,7 +3,10 @@
 
 #include <cstddef>
 
-namespace particle_filter::traits {
+namespace epf::traits {
+
+template <typename T>
+struct particle_type {};
 
 template <typename T>
 struct coordinate_type {};
@@ -16,6 +19,28 @@ struct dimension {
   static constexpr auto value = Size;
 };
 
-}  // namespace particle_filter::traits
+template <typename T, std::size_t Idx, std::size_t Dimension>
+struct access {};
+
+}  // namespace epf::traits
+
+namespace epf {
+
+template <typename T>
+struct ParticleAdapter_r {};
+
+namespace traits {
+
+template <typename T>
+struct coordinate_type<ParticleAdapter_r<T>> {
+  using type = double;
+};
+
+// template <typename T>
+// struct dimension<> {};
+
+}  // namespace traits
+
+}  // namespace epf
 
 #endif
