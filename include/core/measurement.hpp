@@ -32,10 +32,9 @@ enum class MeasurementResult { NoMeasurement, Estimated };
  */
 template <typename State>
 struct MeasurementModel {
-  // MapBase makes particle filter usable only in robotics
-  virtual MeasurementResult estimate(std::vector<State>& t_pose, MapBase<State>& t_map) = 0;
+  virtual MeasurementResult estimate(std::vector<State>& t_pose) = 0;
 
-  virtual State sample_pose_from_latest_measurement(MapBase<State> const& t_map) = 0;
+  virtual State sample_state_from_latest_measurement() = 0;
 
   MeasurementModel()                        = default;
   MeasurementModel(MeasurementModel const&) = default;

@@ -32,7 +32,9 @@ class KDTree {
     std::size_t depth_ = 0;
 
     Node* insert(KDTree* const t_base, ValueType const& t_pt) noexcept {
-      if (/*this->is_leaf() and*/ this->pt_ == t_pt) {
+      // ros-navigation check if kdtree node is leaf, since they copy parent to child when inserting new node, and only
+      // update the leaf node
+      if (this->pt_ == t_pt) {
         this->pt_.update(t_pt);
         return nullptr;
       }

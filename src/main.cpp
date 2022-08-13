@@ -1,18 +1,11 @@
-#include "kdtree.hpp"
-#include "particle_filter.hpp"
-#include "robotics/amcl.hpp"
-#include "robotics/models/differential_drive.hpp"
-#include "robotics/models/laser_beam.hpp"
+#include "app/amcl.hpp"
 
 #include <Eigen/Dense>
 #include <iostream>
 #include <utility>
 
 // TODO: separate weight and pose, (and separate pose to translation and rotation, if possible)
-class Pose {
- public:
-  static constexpr auto Dimension = 3;
-
+struct Pose {
   using PoseType       = Eigen::Array3d;
   using CoordinateType = Eigen::Array2d;
   using AngleType      = double;
@@ -37,7 +30,6 @@ class Pose {
     return Pose{Eigen::Array3d{transformed[0], transformed[1], std::atan2(std::sin(angle), std::cos(angle))}};
   }
 
- private:
   PoseType pose_{0, 0, 0};
 };
 
@@ -46,6 +38,10 @@ struct LaserBeamMeas {
 
   [[nodiscard]] bool operator!=(LaserBeamMeas const& t_rhs) const noexcept {
     return this->raw_measurements_ != t_rhs.raw_measurements_;
+  }
+
+  [[nodiscard]] bool operator==(LaserBeamMeas const& t_rhs) const noexcept {
+    return this->raw_measurements_ == t_rhs.raw_measurements_;
   }
 };
 
@@ -68,17 +64,17 @@ class Map : public epf::MapBase<ParticleType> {
   MapData content_;
 };
 
-using PoseParticle = epf::ParticleAdapter<Pose>;
+using PoseParticle = epf::amcl::Particle<Pose>;
 
 int main(int /*argc*/, char** /*argv*/) {
-  amcl::AMCL2D<PoseParticle> p;
+  epf::amcl::AMCL2D<PoseParticle> p;
 
   Map<Cell, PoseParticle> m;
-  p.add_sensor<epf::LaserBeamModel<LaserBeamMeas, PoseParticle>>();
-  p.set_motion_model<epf::Differential<PoseParticle>>();
+  // p.add_measurement_model<epf::LaserBeamModel<LaserBeamMeas, PoseParticle>>();
+  // p.set_process_model<epf::Differential<PoseParticle>>();
 
   // while (true) {
-  p.sample(m);
+  // p.sample(m);
   // }
 
   std::cout << "Hello world\n";

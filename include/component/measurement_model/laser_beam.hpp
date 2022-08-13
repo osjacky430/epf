@@ -2,7 +2,6 @@
 #define LASER_BEAM_HPP_
 
 #include "core/measurement.hpp"
-#include "robotics/particle.hpp"
 
 #include <boost/math/constants/constants.hpp>
 #include <optional>
@@ -13,15 +12,17 @@ namespace epf {
 /**
  *  @brief  Concrete implementation of sensor_model, modelling laser range finders (2D)
  */
-template <typename MeasurementType, typename ParticleType>
+template <typename SensorData, typename ParticleType>
 class LaserBeamModel final : public MeasurementModel<ParticleType> {
-  Measurement<MeasurementType>* sensor_ = nullptr;
-  MeasurementType latest_measurement_;
+  Measurement<SensorData>* sensor_ = nullptr;
+  MapBase<ParticleType>* map_      = nullptr;
+
+  SensorData latest_measurement_;
 
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
 
   /*!< Laser position relative to the robot, we assumed that ParticleType::ValueType has the meaning of "pose" */
-  typename /* traits::coordinate_type<ParticleType>::type */ ParticleType::ValueType laser_pose_{};
+  typename ParticleType::ValueType laser_pose_{};
   double max_range_ = 0.0;
 
   double z_hit_     = 0.0; /*!< Correct range with local measurement noise */
@@ -36,17 +37,20 @@ class LaserBeamModel final : public MeasurementModel<ParticleType> {
   double z_rand_ = 0.0; /*!< Random measurements*/
 
  public:
+  void attach_sensor(Measurement<SensorData>* t_sensor) noexcept { this->sensor_ = t_sensor; }
+  void attach_map(MapBase<ParticleType>* t_map) noexcept { this->map_ = t_map; }
+
   /**
    *  @brief
    *
    */
-  MeasurementResult estimate(std::vector<ParticleType>& t_particles, epf::MapBase<ParticleType>& t_map) override {
+  MeasurementResult estimate(std::vector<ParticleType>& t_particles) override {
     auto result = this->sensor_->get_measurement();
     if (result == std::nullopt or *result == this->latest_measurement_) {
       return MeasurementResult::NoMeasurement;
     }
 
-    MeasurementType income_meas = *result;
+    SensorData income_meas = *result;
 
     double weight_sum = 0.0;
     for (auto& particle : t_particles) {
@@ -58,9 +62,9 @@ class LaserBeamModel final : public MeasurementModel<ParticleType> {
       auto const laser_pose = particle.value().transform_coordinate(this->laser_pose_);  // find laser position in map
 
       auto const estimate_per_beam = [&](auto const& t_laser_data) {
-        // TODO: generate unit vector from rpy or quaternion (add constraint to MeasurementType)
+        // TODO: generate unit vector from rpy or quaternion (add constraint to SensorData)
         std::array<double, 3> const unit_vector = {std::cos(t_laser_data.second), std::sin(t_laser_data.second), 0};
-        auto const theoretical_range            = t_map.distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
+        auto const theoretical_range = this->map_->distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
 
         auto const diff = t_laser_data.first - theoretical_range;
 
@@ -92,10 +96,10 @@ class LaserBeamModel final : public MeasurementModel<ParticleType> {
   /**
    *
    */
-  ParticleType sample_pose_from_latest_measurement(MapBase<ParticleType> const& t_map) override {
+  ParticleType sample_state_from_latest_measurement() override {
     static constexpr auto pi = boost::math::constants::pi<double>();
 
-    auto const& free_cells = t_map.get_free_cells();
+    auto const& free_cells = this->map_->get_free_cells();
     auto const rng_idx     = std::uniform_int_distribution<std::size_t>(0, free_cells.size())(this->rng_);
     auto const free_cell   = free_cells[rng_idx];
 
@@ -106,7 +110,7 @@ class LaserBeamModel final : public MeasurementModel<ParticleType> {
     auto const laser_pose = particle.value().transform_coordinate(this->laser_pose_);  // find laser position in map
     auto const estimate_per_beam = [&](auto const& t_laser_data) {
       auto const unit_vector       = std::array{std::cos(t_laser_data.second), std::sin(t_laser_data.first), 0.0};
-      auto const theoretical_range = t_map.distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
+      auto const theoretical_range = this->map_->distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
 
       auto const diff = t_laser_data.first - theoretical_range;
 

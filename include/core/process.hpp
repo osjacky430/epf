@@ -35,7 +35,6 @@ template <typename InputType>
 struct ControlInput {
   virtual InputType get_input() = 0;
 
-  // TODO: learn clang-tidy warning, why do I need these, or can I ignore the warning
   ControlInput()                    = default;
   ControlInput(ControlInput const&) = default;
   ControlInput& operator=(ControlInput const&) = default;
@@ -43,7 +42,7 @@ struct ControlInput {
   ControlInput(ControlInput&&) noexcept = default;
   ControlInput& operator=(ControlInput&&) noexcept = default;
 
-  virtual ~ControlInput() = 0;
+  virtual ~ControlInput() = default;
 };
 
 }  // namespace epf
