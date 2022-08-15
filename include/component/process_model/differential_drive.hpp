@@ -5,13 +5,10 @@
 #include "core/process.hpp"
 #include "util/traits.hpp"
 
-#include <boost/concept/usage.hpp>
-#include <boost/concept_check.hpp>
-
 namespace epf {
 
 /**
- *  @brief  This class is a concrete implementation of differential drive process model
+ *  @brief  This class is a concrete implementation of differential drive process model on flat surface
  *
  *  @tparam OdomData
  *  @tparam State
@@ -74,7 +71,7 @@ class Differential final : public ProcessModel<State> {
 
       t_current[0] += delta_trans_hat * std::cos(t_current[2] + delta_rot1_hat);
       t_current[1] += delta_trans_hat * std::cos(t_current[2] + delta_rot1_hat);
-      t_current[2] += delta_rot1_hat + delta_rot2_hat;
+      t_current[2] += (delta_rot1_hat + delta_rot2_hat);
     };
 
     std::for_each(t_particles.begin(), t_particles.end(), esitmate_per_particle);

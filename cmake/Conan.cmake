@@ -16,8 +16,6 @@ macro (configure_package_manager)
     gtest/cci.20210126
     range-v3/0.11.0
     eigen/3.4.0
-    opencv/4.5.5
-    ogg/1.3.5
     GENERATORS
     cmake_find_package)
 

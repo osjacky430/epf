@@ -2,6 +2,7 @@
 #define ADAPTIVE_SAMPLE_SIZE_HPP_
 
 #include "core/kdtree.hpp"
+#include "util/traits.hpp"
 
 #include <algorithm>
 #include <boost/math/special_functions.hpp>

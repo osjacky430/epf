@@ -6,9 +6,9 @@
 
 // TODO: separate weight and pose, (and separate pose to translation and rotation, if possible)
 struct Pose {
-  using PoseType       = Eigen::Array3d;
-  using CoordinateType = Eigen::Array2d;
-  using AngleType      = double;
+  using PoseType = Eigen::Array3d;
+  // using CoordinateType = Eigen::Array2d;
+  // using AngleType      = double;
 
   Pose() = default;
   Pose(double const t_x, double const t_y, double const t_w) : pose_{t_x, t_y, t_w} {}
@@ -31,6 +31,8 @@ struct Pose {
   }
 
   PoseType pose_{0, 0, 0};
+
+  [[nodiscard]] Pose operator*(double const t_scale) const noexcept { return Pose{this->pose_ * t_scale}; }
 };
 
 struct LaserBeamMeas {

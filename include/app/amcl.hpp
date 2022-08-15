@@ -7,9 +7,9 @@
 
 namespace epf::amcl {
 
-struct PivotComp;
+struct KDTreeComp;
 
-template <typename T, typename PC = PivotComp>
+template <typename T, typename PC = KDTreeComp>
 struct Particle final : public ParticleAdapter<T> {
   using ValueType = T;
   using PivotComp = PC;
@@ -21,65 +21,21 @@ struct Particle final : public ParticleAdapter<T> {
 
   void update(Particle const& t_pt) noexcept { this->weight_ += t_pt.weight(); }
 
-  // auto operator*(double const /*t_scale*/) const noexcept {
-  //   T tmp = this->value_;
-  //   // detail::multiply(tmp, t_scale);
-  //   return Particle(std::forward<T>(tmp), this->weight_);
-  // }
-
-  // auto operator+(Particle const& t_add) const noexcept {
-  //   T tmp = this->value_;
-  //   // detail::add(tmp, t_add.value_);
-  //   return Particle{std::forward<T>(tmp), this->weight_};
-  // }
-
-  // Particle& operator+=(Particle const& t_add) noexcept {
-  //   // detail::add(this->value_, t_add.value_);
-  //   return *this;
-  // }
-
-  // Particle& operator/=(double const t_scale) noexcept {
-  //   // detail::divide(this->value_, t_scale);
-  //   return *this;
-  // }
-
-  // auto operator/(Particle const& t_divisor) const noexcept {
-  //   T tmp = this->value_;
-  //   // detail::divide(tmp, t_divisor.value_);
-  //   return Particle{std::forward<T>(tmp), this->weight_};
-  // }
-
-  // auto operator-(Particle const& t_rhs) const noexcept {
-  //   T tmp = this->value_;
-  //   // detail::subtract(tmp, t_rhs.value_);
-  //   return Particle{std::forward<T>(tmp), this->weight_};
-  // }
-
-  // bool operator==(Particle const& t_rhs) const noexcept {
-  //   // for (std::size_t idx = 0; idx < traits::dimension<T>::size; ++idx) {
-  //   //   if (t_rhs.value_.get(idx) != this->value_.get(idx)) {
-  //   //     return false;
-  //   //   }
-  //   // }
-
-  //   return true;
-  // }
-
-  // double operator[](std::size_t const t_idx) const noexcept { return this->value_.get(t_idx); }
+  static constexpr auto PARTICLE_DIMENSION = dimension(std::declval<T>());
 
  private:
-  // std::size_t pivot_idx_ = traits::dimension<T>::size;
-  double pivot_value_ = 0.0;
+  std::size_t pivot_idx_ = PARTICLE_DIMENSION;
+  double pivot_value_    = 0.0;
 };
 
-struct PivotComp {
+struct KDTreeComp {
   template <typename T>
-  bool operator()(Particle<T, PivotComp>& t_lhs, Particle<T, PivotComp> const& t_rhs) const noexcept {
+  bool operator()(Particle<T, KDTreeComp>& t_lhs, Particle<T, KDTreeComp> const& t_rhs) const noexcept {
     // if (t_lhs.pivot_idx_ < traits::dimension<T>::size) {
     //   return t_lhs.pivot_value_ < t_rhs.value_.get(t_lhs.pivot_idx_);
     // }
 
-    double max_diff          = 0.0;
+    // double max_diff          = 0.0;
     std::size_t max_diff_idx = 0;
     // for (std::size_t idx = 0; idx < traits::dimension<T>::size; ++idx) {
     //   auto const diff = t_lhs.value_.get(idx) - t_rhs.value_.get(idx);
@@ -127,7 +83,7 @@ class AMCL2D final : public epf::ParticleFilter<ParticleType, Resampler> {
       this->previous_particles_ = this->resample(measurement.get(), this->previous_particles_);
     }
 
-    auto const weighted_sum = [this](auto const& t_left, auto const& t_right) {
+    auto const weighted_sum = [](auto const& t_left, auto const& t_right) {
       return t_left.value() + t_right.weighted_value();
     };
 

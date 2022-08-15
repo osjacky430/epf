@@ -144,6 +144,7 @@ class KDTree {
   [[nodiscard]] bool empty() const noexcept { return this->size_ == 0; }
   [[nodiscard]] std::size_t size() const noexcept { return this->size_; }
 
+  // TODO should be taking universal reference
   [[nodiscard]] Node* find_node(ValueType const& t_pt) const noexcept {
     auto* traverse = this->root_.get();
     while (traverse != nullptr) {

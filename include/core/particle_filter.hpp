@@ -28,7 +28,7 @@ class ParticleAdapter {
   ParticleAdapter(ParticleAdapter const&)     = default;
   ParticleAdapter(ParticleAdapter&&) noexcept = default;
 
-  ParticleAdapter& operator=(ParticleAdapter const&) = default;
+  ParticleAdapter& operator=(ParticleAdapter const&)     = default;
   ParticleAdapter& operator=(ParticleAdapter&&) noexcept = default;
 
   explicit ParticleAdapter(double const t_weight) : ParticleAdapter(T{}, t_weight) {}
@@ -79,7 +79,7 @@ class ParticleFilter : ResampleStrategy {
   ParticleFilter(ParticleFilter const&)     = default;
   ParticleFilter(ParticleFilter&&) noexcept = default;
 
-  ParticleFilter& operator=(ParticleFilter const&) = default;
+  ParticleFilter& operator=(ParticleFilter const&)     = default;
   ParticleFilter& operator=(ParticleFilter&&) noexcept = default;
 
   virtual ~ParticleFilter() = default;

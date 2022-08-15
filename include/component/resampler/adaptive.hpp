@@ -2,7 +2,6 @@
 #define ADAPTIVE_RESAMPLER_HPP_
 
 #include "core/measurement.hpp"
-#include "map.hpp"  // TODO: remove
 
 #include <algorithm>
 #include <cassert>
@@ -59,7 +58,7 @@ class AdaptiveResample : ParticleSizeStrategy<ParticleType> {
     std::vector<ParticleType> ret_val(t_previous_particles.size());
     if (cumulative_weight.back() == 0.0) {
       std::transform(t_previous_particles.begin(), t_previous_particles.end(), ret_val.begin(), [&](auto t_particle) {
-        t_particle.weight() = 1.0 / static_cast<double>(t_previous_particles.size());
+        t_particle.set_weight(1.0 / static_cast<double>(t_previous_particles.size()));
         return t_particle;
       });
       return ret_val;
@@ -93,7 +92,8 @@ class AdaptiveResample : ParticleSizeStrategy<ParticleType> {
       }
     }
 
-    std::for_each(ret_val.begin(), ret_val.end(), [&](auto& t_particle) { t_particle.weight() /= total_weight; });
+    std::for_each(ret_val.begin(), ret_val.end(),
+                  [&](auto& t_particle) { t_particle.set_weight(t_particle.weight() / total_weight); });
 
     return ret_val;
   }

@@ -31,4 +31,4 @@ find_package(range-v3 REQUIRED)
 add_subdirectory(src)
 add_subdirectory(test)
 
-add_subdirectory(demo)
+# add_subdirectory(demo)
