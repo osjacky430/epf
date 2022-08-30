@@ -27,8 +27,12 @@ configure_project_option(
 
 find_package(Boost REQUIRED)
 find_package(range-v3 REQUIRED)
+find_package(fmt REQUIRED)
+find_package(Eigen3 3.4.0 EXACT REQUIRED)
+
+target_link_libraries(epf INTERFACE range-v3::range-v3 Eigen3::Eigen)
 
 add_subdirectory(src)
 add_subdirectory(test)
 
-# add_subdirectory(demo)
+add_subdirectory(example)

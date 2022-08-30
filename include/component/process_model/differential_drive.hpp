@@ -4,18 +4,34 @@
 #include "core/measurement.hpp"
 #include "core/process.hpp"
 #include "util/traits.hpp"
+#include <boost/concept_check.hpp>
 
 namespace epf {
+
+template <typename State>
+class DifferentialModelStateConcept {
+  BOOST_CONCEPT_USAGE(DifferentialModelStateConcept) {
+    auto p = State{};
+
+    [[maybe_unused]] double& ref_x = p.x();
+    [[maybe_unused]] double& ref_y = p.y();
+    [[maybe_unused]] double& ret_w = p.w();
+  }
+};
 
 /**
  *  @brief  This class is a concrete implementation of differential drive process model on flat surface
  *
- *  @tparam OdomData
- *  @tparam State
- *  @tparam OdomDataDiff
+ *  @tparam OdomData  Data structure for odometry data, required to implement subscript operator, representing [x,
+ *                    y, w]. (coordinate, not displacement)
+ *  @tparam State Data structure for state estimation, required to implement function x(), y(), and w(), that return
+ *                reference to [x, y, w] variable.
+ *
  */
-template <typename OdomData, typename State, typename OdomDataDiff = OdomData>
+template <typename OdomData, typename State>
 class Differential final : public ProcessModel<State> {
+  using OdomDataDiff = OdomData;
+
   Measurement<OdomData>* odom_meas_ = nullptr;
   std::mt19937 rng_                 = std::mt19937(std::random_device()());
 
@@ -26,8 +42,7 @@ class Differential final : public ProcessModel<State> {
   std::array<double, 2> alhpa_trans_ = {0, 0};
 
   static_assert(has_subscript_operator<OdomData>::value);
-  static_assert(has_subscript_operator<OdomDataDiff>::value);
-  static_assert(has_subscript_operator<State>::value);
+  // BOOST_CONCEPT_ASSERT(DifferentialModelStateConcept<State>);
 
  public:
   void set_alpha_rot(std::array<double, 2> const& t_alpha_rot) noexcept { this->alhpa_rot_ = t_alpha_rot; }
@@ -69,13 +84,13 @@ class Differential final : public ProcessModel<State> {
       double const delta_trans_hat = delta_trans - trans_dist(this->rng_);
       double const delta_rot2_hat  = delta_rot2 - rot_dist(this->rng_);
 
-      t_current[0] += delta_trans_hat * std::cos(t_current[2] + delta_rot1_hat);
-      t_current[1] += delta_trans_hat * std::cos(t_current[2] + delta_rot1_hat);
-      t_current[2] += (delta_rot1_hat + delta_rot2_hat);
+      t_current.x() += delta_trans_hat * std::cos(t_current.x() + delta_rot1_hat);
+      t_current.y() += delta_trans_hat * std::cos(t_current.y() + delta_rot1_hat);
+      t_current.w() += (delta_rot1_hat + delta_rot2_hat);
     };
 
     std::for_each(t_particles.begin(), t_particles.end(), esitmate_per_particle);
-    this->previous_ = *result;
+    this->previous_ = current_measurement;
 
     return Prediction::Updated;
   }

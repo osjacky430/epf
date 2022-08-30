@@ -11,13 +11,7 @@ macro (configure_package_manager)
     add_link_options(-stdlib=libc++)
   endif ()
 
-  conan_cmake_configure(
-    REQUIRES
-    gtest/cci.20210126
-    range-v3/0.11.0
-    eigen/3.4.0
-    GENERATORS
-    cmake_find_package)
+  conan_cmake_configure(REQUIRES gtest/cci.20210126 range-v3/0.11.0 eigen/3.4.0 fmt/9.1.0 GENERATORS cmake_find_package)
 
   conan_cmake_autodetect(settings BUILD_TYPE Release)
   conan_cmake_install(PATH_OR_REFERENCE . BUILD missing SETTINGS ${settings})

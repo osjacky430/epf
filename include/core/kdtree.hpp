@@ -3,25 +3,85 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 #include <memory>
 #include <vector>
 
 namespace epf {
 
-enum class Iteratation {
+enum class Iteration {
   InOrder,
 };
 
-/**
- *  @todo 1. add tree iterator
- */
-template <typename Point, typename ValueComp>
+// temporary: move outside of kdtree
+template <typename Tree>
+class KDTreeIterator : public std::iterator<std::bidirectional_iterator_tag, typename Tree::Node> {
+  friend Tree;
+
+  using TreeNode = typename Tree::Node;
+  Tree const* tree_;
+  TreeNode const* current_;
+
+  explicit KDTreeIterator(Tree const* t_tree, TreeNode const* t_current = nullptr)
+    : tree_(t_tree), current_(t_current) {}
+
+ public:
+  [[nodiscard]] bool operator==(KDTreeIterator const& t_rhs) const { return this->current_ == t_rhs.current_; }
+
+  [[nodiscard]] bool operator!=(KDTreeIterator const& t_rhs) const { return this->current_ != t_rhs.current_; }
+
+  [[nodiscard]] TreeNode const& operator*() const { return *this->current_; }
+
+  KDTreeIterator& operator++() {
+    if (this->current_->child_node_[1] != nullptr) {
+      this->current_ = this->current_->child_node_[1].get();
+      while (this->current_->child_node_[0] != nullptr) {
+        this->current_ = this->current_->child_node_[0].get();
+      }
+    } else {
+      auto parent = this->current_->parent_;
+      while (parent != nullptr and this->current_ == parent->child_node_[1].get()) {
+        this->current_ = parent;
+        parent         = parent->parent_;
+      }
+
+      this->current_ = parent;
+    }
+
+    return *this;
+  }
+
+  KDTreeIterator& operator--() {
+    if (this->current_->child_node_[0] != nullptr) {
+      this->current_ = this->current_->child_node_[0].get();
+    } else {
+      auto parent = this->current_->parent_;
+      while (parent != nullptr and this->current_ != parent->child_node_[1].get()) {
+        this->current_ = parent;
+        parent         = parent->parent_;
+      }
+
+      this->current_ = parent;
+    }
+
+    return *this;
+  }
+};
+
+template <typename T, typename ValueComp>
 class KDTree {
-  using ValueType = Point;
+  using ValueType   = T;
+  using ElementType = double;       // usually double, if encounter other cases, inject to T
+  using IndexType   = std::size_t;  // usually std::size_t, same as above
+
+  friend class KDTreeIterator<KDTree>;
 
  public:
   class Node {
+    using PivotType = std::pair<ElementType, IndexType>;
+
     friend class KDTree;
+    friend class KDTreeIterator<KDTree>;
 
     Node* parent_ = nullptr;
     std::array<std::unique_ptr<Node>, 2> child_node_;
@@ -29,17 +89,17 @@ class KDTree {
     ValueType pt_;
     ValueComp pt_comp_;
 
+    PivotType pivot_   = {0, std::numeric_limits<IndexType>::max()};
     std::size_t depth_ = 0;
 
     Node* insert(KDTree* const t_base, ValueType const& t_pt) noexcept {
       // ros-navigation check if kdtree node is leaf, since they copy parent to child when inserting new node, and only
       // update the leaf node
-      if (this->pt_ == t_pt) {
-        this->pt_.update(t_pt);
+      if (std::equal_to<ValueType>{}(this->pt_, t_pt)) {
         return nullptr;
       }
 
-      auto& node_to_operate = pt_comp_(this->pt_, t_pt) ? this->child_node_[0] : this->child_node_[1];
+      auto& node_to_operate = pt_comp_(this->pt_, t_pt, &this->pivot_) ? this->child_node_[0] : this->child_node_[1];
       if (node_to_operate != nullptr) {
         return node_to_operate->insert(t_base, t_pt);
       }
@@ -63,62 +123,9 @@ class KDTree {
     }
   };
 
-  // in-order
-  class KDTreeIterator : public std::iterator<std::bidirectional_iterator_tag, Node> {
-    friend class KDTree;
+  KDTreeIterator<KDTree> begin() { return KDTreeIterator<KDTree>(this, this->get_left_most()); }
 
-    KDTree const* tree_;
-    Node const* current_;
-
-    explicit KDTreeIterator(KDTree const* t_tree, Node const* t_current = nullptr)
-      : tree_(t_tree), current_(t_current) {}
-
-   public:
-    [[nodiscard]] bool operator==(KDTreeIterator const& t_rhs) const { return this->current_ == t_rhs.current_; }
-
-    [[nodiscard]] bool operator!=(KDTreeIterator const& t_rhs) const { return this->current_ != t_rhs.current_; }
-
-    [[nodiscard]] Node const& operator*() const { return *this->current_; }
-
-    KDTreeIterator& operator++() {
-      if (this->current_->child_node_[1] != nullptr) {
-        this->current_ = this->current_->child_node_[1].get();
-        while (this->current_->child_node_[0] != nullptr) {
-          this->current_ = this->current_->child_node_[0].get();
-        }
-      } else {
-        auto parent = this->current_->parent_;
-        while (parent != nullptr and this->current_ == parent->child_node_[1].get()) {
-          this->current_ = parent;
-          parent         = parent->parent_;
-        }
-
-        this->current_ = parent;
-      }
-
-      return *this;
-    }
-
-    KDTreeIterator& operator--() {
-      if (this->current_->child_node_[0] != nullptr) {
-        this->current_ = this->current_->child_node_[0].get();
-      } else {
-        auto parent = this->current_->parent_;
-        while (parent != nullptr and this->current_ != parent->child_node_[1].get()) {
-          this->current_ = parent;
-          parent         = parent->parent_;
-        }
-
-        this->current_ = parent;
-      }
-
-      return *this;
-    }
-  };
-
-  KDTreeIterator begin() { return KDTreeIterator(this, this->get_left_most()); }
-
-  KDTreeIterator end() { return KDTreeIterator(this); }
+  KDTreeIterator<KDTree> end() { return KDTreeIterator<KDTree>(this); }
 
   void clear() {
     this->root_.reset();
@@ -152,7 +159,8 @@ class KDTree {
         break;
       }
 
-      traverse = pt_cmp_(traverse->pt_, t_pt) ? traverse->child_node_[0].get() : traverse->child_node_[1].get();
+      traverse = pt_cmp_(traverse->pt_, t_pt, &traverse->pivot_) ? traverse->child_node_[0].get()
+                                                                 : traverse->child_node_[1].get();
     }
 
     return traverse;

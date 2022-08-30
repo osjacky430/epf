@@ -1,6 +1,6 @@
 # EPF - Extendable Particle Filter
 
-Particle filter has been studied since early 2000. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problem. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
+Particle filter has been studied since 20th century. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problem. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
 
 ### Particle Filter
 
@@ -18,5 +18,3 @@ The Particle Concept describes the requirement for a particle type. The requirem
 
 
 ### TODO
-
-1. inject epf::MapBase

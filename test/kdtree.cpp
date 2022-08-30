@@ -8,9 +8,6 @@ struct Point {
   static constexpr auto Dim = 3;
   explicit Point(std::array<double, Dim> const& t_p, double const t_weight = 0) : pt_{t_p}, weight_{t_weight} {}
 
-  std::size_t pivot_idx_ = Dim + 1;
-  int pivot_value_       = 0;
-
   std::array<double, Dim> pt_{};
   double weight_ = 0.0;
 
@@ -27,20 +24,33 @@ struct Point {
   void update(Point const& t_pt) noexcept { this->weight_ += t_pt.weight_; }
 };
 
-struct PointComp {
+template <>
+struct std::equal_to<Point> {
   bool operator()(Point& t_lhs, Point const& t_rhs) const noexcept {
-    if (t_lhs.pivot_idx_ <= Point::Dim) {
-      return t_lhs.pivot_value_ < t_rhs.pt_[t_lhs.pivot_idx_];
+    bool ret_val = (t_lhs == t_rhs);
+    if (ret_val) {
+      t_lhs.update(t_rhs);
     }
 
-    auto const& diff    = t_lhs - t_rhs;
-    auto const max_diff = std::max(diff.pt_.begin(), diff.pt_.end(), [](double const* t_first, double const* t_sec) {
-      return std::abs(*t_first) < std::abs(*t_sec);
-    });
-    t_lhs.pivot_idx_    = max_diff - diff.pt_.begin();
-    t_lhs.pivot_value_  = (t_lhs.pt_[t_lhs.pivot_idx_] + t_rhs.pt_[t_lhs.pivot_idx_]) / 2.0;  // mean split
+    return ret_val;
+  }
+};
 
-    return t_lhs.pivot_value_ < t_rhs.pt_[t_lhs.pivot_idx_];
+struct PointComp {
+  bool operator()(Point const& t_lhs, Point const& t_rhs,
+                  std::pair<double, std::size_t>* const t_pivot) const noexcept {
+    if (t_pivot->second < Point::Dim) {
+      return t_pivot->first < t_rhs.pt_[t_pivot->second];
+    }
+
+    auto const& diff = t_lhs - t_rhs;
+    auto const* const max_diff =
+      std::max(diff.pt_.begin(), diff.pt_.end(),
+               [](double const* t_first, double const* t_sec) { return std::abs(*t_first) < std::abs(*t_sec); });
+    t_pivot->second = max_diff - diff.pt_.begin();
+    t_pivot->first  = (t_lhs.pt_[t_pivot->second] + t_rhs.pt_[t_pivot->second]) / 2.0;  // mean split
+
+    return t_pivot->first < t_rhs.pt_[t_pivot->second];
   }
 };
 

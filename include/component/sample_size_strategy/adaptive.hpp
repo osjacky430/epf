@@ -12,10 +12,30 @@
 
 namespace epf {
 
-template <typename ParticleType>
-class KLDSampling {
-  ParticleType bin_size_;  // shouldn't be particle size, eigen::array<x>
+struct DefaultTreeComp {
+  template <typename State>
+  bool operator()(State const& t_lhs, State const& t_rhs,
+                  std::pair<double, std::size_t>* const t_pivot) const noexcept {
+    if (t_pivot->second < dimension_t<State>::value) {
+      return t_pivot->first < t_rhs[t_pivot->second];
+    }
 
+    for (std::size_t idx = 0; idx < dimension_t<State>::value; ++idx) {
+      if (auto const abs_val = std::abs(t_lhs[idx] - t_rhs[idx]); abs_val > t_pivot->first) {
+        t_pivot->first  = abs_val;
+        t_pivot->second = idx;
+      }
+    }
+
+    t_pivot->first = (t_lhs[t_pivot->second] + t_rhs[t_pivot->second]) / 2.0;  // mean split
+
+    return t_pivot->first < t_rhs[t_pivot->second];
+  }
+};
+
+template <typename State, typename TreeComp = DefaultTreeComp>
+class KLDSampling {
+  std::array<double, dimension_v<State>> bin_size_;
   static constexpr auto DEFAULT_EPSILON = 0.01;
 
   /* !< Maximum allowed error (K-L distance) between true and estimated distribution */
@@ -35,14 +55,15 @@ class KLDSampling {
   std::size_t max_particle_count_{};
 
   /* !< Data structure to store histogram */
-  epf::KDTree<ParticleType, typename ParticleType::PivotComp> kdtree_;
+  epf::KDTree<State, TreeComp> kdtree_;
 
  public:
   [[nodiscard]] std::size_t max_particle() const noexcept { return this->max_particle_count_; }
 
   [[nodiscard]] std::size_t min_particle() const noexcept { return this->min_particle_count_; }
 
-  // kd tree range search?
+  // cluster here is a bit difficult since we remove weight from State, we need to find other way to update weight if
+  // we insert same element into tree
   void cluster_particles() {}
 
   /**
@@ -53,7 +74,7 @@ class KLDSampling {
    *
    *  [1] Fox, Dieter. "Adapting the Sample Size in Particle Filters Through KLD-Sampling"
    */
-  [[nodiscard]] std::size_t calculate_particle_size(std::vector<ParticleType> const& t_particles) noexcept {
+  [[nodiscard]] std::size_t calculate_particle_size(std::vector<State> const& t_particles) noexcept {
     this->kdtree_.clear();
 
     std::for_each(t_particles.begin(), t_particles.end(),
@@ -73,7 +94,7 @@ class KLDSampling {
 
   KLDSampling() = default;
   explicit KLDSampling(std::size_t const t_min_particle_count, std::size_t const t_max_particle_count,
-                       ParticleType t_bin_size, double const t_epsilon = DEFAULT_EPSILON,
+                       State const& t_bin_size, double const t_epsilon = DEFAULT_EPSILON,
                        double const t_upper_quantile = DEFAULT_UPPER_QUANTILE) noexcept
     : bin_size_(t_bin_size),
       epsilon_(t_epsilon),
