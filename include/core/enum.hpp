@@ -3,7 +3,7 @@
 
 namespace epf {
 
-enum class MeasurementResult { NoMeasurement, Estimated };
+enum class MeasurementResult { NoMeasurement, Updated };
 
 enum class Prediction { NoUpdate, Updated };
 

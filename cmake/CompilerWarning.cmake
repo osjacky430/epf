@@ -47,6 +47,7 @@ function (_get_gcc_clang_common_warnings WARNING)
       -Wsign-conversion # warn on sign conversions
       -Wdouble-promotion # warn if float is implicit promoted to double
       -Wformat=2 # warn on security issues around functions that format output (ie printf)
+      -Wfatal-errors
       $<$<BOOL:${WARNINGS_AS_ERRORS}>:-Werror>
       PARENT_SCOPE)
 endfunction ()
@@ -68,7 +69,6 @@ function (_get_gcc_warnings WARNING)
       $<$<VERSION_GREATER:$<CXX_COMPILER_VERSION>,8.0>:-Wduplicated-branches> # warn if if / else branches have duplicated code
       -Wlogical-op # warn about logical operations being used where bitwise were probably wanted
       -Wuseless-cast # warn if you perform a cast to the same type
-      -Wfatal-errors
       PARENT_SCOPE)
 endfunction ()
 

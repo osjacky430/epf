@@ -13,7 +13,7 @@ include(Coverage)
 function (configure_project_target)
   cmake_parse_arguments("" "" "TARGET" "" ${ARGN})
 
-  target_include_directories(${_TARGET} INTERFACE ${PROJECT_SOURCE_DIR}/include)
+  target_include_directories(${_TARGET} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
   target_compile_options(
     ${_TARGET}
     # This is a temporary solution to suppress warnings from 3rd party library in MSVC

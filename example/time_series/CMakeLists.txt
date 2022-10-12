@@ -1,2 +1,4 @@
-add_executable(vanilla_pf vanilla_pf.cpp)
-target_link_libraries(vanilla_pf PUBLIC example_config)
+add_executable(pf_vanilla pf_vanilla.cpp)
+target_link_libraries(pf_vanilla PUBLIC example_config)
+add_executable(pf_unscented pf_unscented.cpp)
+target_link_libraries(pf_unscented PUBLIC example_config)

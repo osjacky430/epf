@@ -11,8 +11,8 @@
 namespace epf {
 
 // augmented, with w_slow and w_fast to solve robot kidnapping
-template <typename State, template <typename T> typename ParticleSizeStrategy>
-class AdaptiveResample : ParticleSizeStrategy<State> {
+template <typename State, template <typename...> typename ParticleSizeStrategy, typename... SizeStrategyTParam>
+class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
   double w_slow_ = 0.0; /*!< long term average */
   double w_fast_ = 0.0; /*!< short term average */
 

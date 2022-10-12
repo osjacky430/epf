@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -15,14 +16,19 @@ enum class Iteration {
 
 // temporary: move outside of kdtree
 template <typename Tree>
-class KDTreeIterator : public std::iterator<std::bidirectional_iterator_tag, typename Tree::Node> {
+class KDTreeIterator {
+  using iterator_category = std::bidirectional_iterator_tag;
+  using value_type        = typename Tree::Node;
+  using pointer           = typename Tree::Node*;
+  using reference         = typename Tree::Node&;
+  using difference_type   = std::ptrdiff_t;
+
   friend Tree;
 
-  using TreeNode = typename Tree::Node;
   Tree const* tree_;
-  TreeNode const* current_;
+  value_type const* current_;
 
-  explicit KDTreeIterator(Tree const* t_tree, TreeNode const* t_current = nullptr)
+  explicit KDTreeIterator(Tree const* t_tree, value_type const* t_current = nullptr)
     : tree_(t_tree), current_(t_current) {}
 
  public:
@@ -30,7 +36,7 @@ class KDTreeIterator : public std::iterator<std::bidirectional_iterator_tag, typ
 
   [[nodiscard]] bool operator!=(KDTreeIterator const& t_rhs) const { return this->current_ != t_rhs.current_; }
 
-  [[nodiscard]] TreeNode const& operator*() const { return *this->current_; }
+  [[nodiscard]] value_type const& operator*() const { return *this->current_; }
 
   KDTreeIterator& operator++() {
     if (this->current_->child_node_[1] != nullptr) {

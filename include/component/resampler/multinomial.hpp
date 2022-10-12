@@ -1,7 +1,8 @@
-#ifndef DEFAULT_RESAMPLER_HPP_
-#define DEFAULT_RESAMPLER_HPP_
+#ifndef MULTINOMIAL_RESAMPLER_HPP_
+#define MULTINOMIAL_RESAMPLER_HPP_
 
 #include "core/measurement.hpp"
+#include "core/state.hpp"
 #include <algorithm>
 #include <random>
 #include <range/v3/algorithm/for_each.hpp>
@@ -10,13 +11,26 @@
 
 namespace epf {
 
-// only importance resampling
+/**
+ *  @brief  This class implement default resampling strategy, i.e. Sampling-importance resampling (SIR), which is
+ *          equivalent to sampling from multinomial distribution
+ *
+ *  Gordon 1994
+ */
 template <typename State>
-struct DefaultResample {
+class MultinomialResample {
+  using StateVector = typename StateTraits<State>::ArithmeticType;
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
 
-  void resample(epf::MeasurementModel<State>* const /**/, std::vector<State>& t_previous_particles,
+  std::size_t resample_num_ = 0;
+
+ public:
+  void set_resample_size(std::size_t t_n) noexcept { this->resample_num_ = t_n; }
+
+  void resample(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,
                 std::vector<double>& t_weight) noexcept {
+    std::size_t const sample_count = this->resample_num_ != 0 ? this->resample_num_ : t_previous_particles.size();
+
     auto const cumulative_weight = [&]() {
       std::vector<double> ret_val = t_weight;
       for (std::size_t i = 1; i < t_weight.size(); ++i) {
@@ -26,8 +40,8 @@ struct DefaultResample {
       return ret_val;
     }();
 
-    std::vector<State> estimated_state(t_previous_particles.size());
-    std::vector<double> state_weight(t_previous_particles.size());
+    std::vector<StateVector> estimated_state(sample_count);
+    std::vector<double> state_weight(sample_count);
     if (cumulative_weight.back() == 0.0) {
       return;
     }
@@ -43,7 +57,7 @@ struct DefaultResample {
       std::get<1>(pair) = t_weight[chosen_idx];
     });
 
-    std::for_each(state_weight.begin(), state_weight.end(), [=](auto& t_val) { t_val /= total_weight; });
+    ranges::for_each(state_weight, [=](auto& t_val) { t_val /= total_weight; });
 
     t_previous_particles = std::move(estimated_state);
     t_weight             = std::move(state_weight);

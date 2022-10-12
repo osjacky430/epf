@@ -1,8 +1,8 @@
 #ifndef LASER_BEAM_HPP_
 #define LASER_BEAM_HPP_
 
+#include "component/misc/map.hpp"
 #include "core/measurement.hpp"
-#include "map.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <optional>
 #include <random>
@@ -31,7 +31,7 @@ struct BeamModelParam {
 template <typename SensorData, typename State>
 class LaserBeamModel final : public MeasurementModel<State> {
   Measurement<SensorData>* sensor_ = nullptr;
-  MapBase<State>* map_             = nullptr;
+  LocationMap<Dimension<2>>* map_  = nullptr;
 
   SensorData latest_measurement_;
 
@@ -54,7 +54,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
 
  public:
   void attach_sensor(Measurement<SensorData>* t_sensor) noexcept { this->sensor_ = t_sensor; }
-  void attach_map(MapBase<State>* t_map) noexcept { this->map_ = t_map; }
+  void attach_map(LocationMap<Dimension<2>>* t_map) noexcept { this->map_ = t_map; }
 
   LaserBeamModel() = default;
   explicit LaserBeamModel(BeamModelParam const t_param)
@@ -70,14 +70,8 @@ class LaserBeamModel final : public MeasurementModel<State> {
    *  @brief
    */
   MeasurementResult update(std::vector<State>& t_states, std::vector<double>& t_weight) override {
-    auto result = this->sensor_->get_measurement();
-    if (result == std::nullopt or *result == this->latest_measurement_) {
-      return MeasurementResult::NoMeasurement;
-    }
-
-    SensorData income_meas = *result;
-
-    double weight_sum = 0.0;
+    double weight_sum      = 0.0;
+    SensorData income_meas = this->sensor_->get_measurement();
     for (auto [state, weight] : ranges::views::zip(t_states, t_weight)) {
       double estimated_weight = 1.0;
       auto const laser_pose   = transform_coordinate(state, this->laser_pose_);  // find laser position in map
@@ -114,7 +108,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
     std::for_each(t_weight.begin(), t_weight.end(), [=](auto& t_v) { t_v /= weight_sum; });
 
     this->latest_measurement_ = income_meas; /* std::move(income_meas) */
-    return MeasurementResult::Estimated;
+    return MeasurementResult::Updated;
   }
 
   /**
@@ -134,7 +128,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
     double weight = 1;
 
     // TODO
-    auto const laser_pose = particle.value_.transform_coordinate(this->laser_pose_);  // find laser position in map
+    auto const laser_pose = transform_coordinate(particle.value_, this->laser_pose_);  // find laser position in map
 
     auto const estimate_per_beam = [&](auto const& t_laser_data) {
       auto const unit_vector       = std::array{std::cos(t_laser_data.second), std::sin(t_laser_data.first), 0.0};

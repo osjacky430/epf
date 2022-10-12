@@ -1,0 +1,3 @@
+add_executable(landmark_localization landmark_localization.cpp)
+target_include_directories(landmark_localization PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(landmark_localization PRIVATE example_config)
