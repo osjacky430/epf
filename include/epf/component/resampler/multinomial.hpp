@@ -1,8 +1,9 @@
 #ifndef MULTINOMIAL_RESAMPLER_HPP_
 #define MULTINOMIAL_RESAMPLER_HPP_
 
-#include "core/measurement.hpp"
-#include "core/state.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/state.hpp"
+#include "epf/util/math.hpp"
 #include <algorithm>
 #include <random>
 #include <range/v3/algorithm/for_each.hpp>
@@ -31,15 +32,7 @@ class MultinomialResample {
                 std::vector<double>& t_weight) noexcept {
     std::size_t const sample_count = this->resample_num_ != 0 ? this->resample_num_ : t_previous_particles.size();
 
-    auto const cumulative_weight = [&]() {
-      std::vector<double> ret_val = t_weight;
-      for (std::size_t i = 1; i < t_weight.size(); ++i) {
-        ret_val[i] += ret_val[i - 1];
-      }
-
-      return ret_val;
-    }();
-
+    auto const cumulative_weight = calculate_cumulative_weight(t_weight);
     std::vector<StateVector> estimated_state(sample_count);
     std::vector<double> state_weight(sample_count);
     if (cumulative_weight.back() == 0.0) {

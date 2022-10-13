@@ -44,6 +44,15 @@ class MultivariateNormalDistribution {
   }
 };
 
+inline std::vector<double> calculate_cumulative_weight(std::vector<double> const& t_weight) {
+  std::vector<double> ret_val = t_weight;
+  for (std::size_t i = 1; i < t_weight.size(); ++i) {
+    ret_val[i] += ret_val[i - 1];
+  }
+
+  return ret_val;
+}
+
 }  // namespace epf
 
 #endif

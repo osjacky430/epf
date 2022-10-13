@@ -1,10 +1,10 @@
 #ifndef TIME_SERIES_SIM_CFG_
 #define TIME_SERIES_SIM_CFG_
 
-#include "core/enum.hpp"
-#include "core/measurement.hpp"
-#include "core/process.hpp"
-#include "core/state.hpp"
+#include "epf/core/enum.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/process.hpp"
+#include "epf/core/state.hpp"
 #include "time_series.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <cstddef>

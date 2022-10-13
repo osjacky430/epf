@@ -1,10 +1,10 @@
 #ifndef DEFAULT_SAMPLER_HPP_
 #define DEFAULT_SAMPLER_HPP_
 
-#include "core/enum.hpp"
-#include "core/measurement.hpp"
-#include "core/process.hpp"
-#include "core/state.hpp"
+#include "epf/core/enum.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/process.hpp"
+#include "epf/core/state.hpp"
 #include <type_traits>
 #include <vector>
 

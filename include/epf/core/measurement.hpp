@@ -1,9 +1,9 @@
 #ifndef MEASUREMENT_HPP_
 #define MEASUREMENT_HPP_
 
-#include "core/state.hpp"
-#include "enum.hpp"
-#include "util/exceptions.hpp"
+#include "epf/core/enum.hpp"
+#include "epf/core/state.hpp"
+#include "epf/util/exceptions.hpp"
 #include <optional>
 #include <type_traits>
 #include <vector>

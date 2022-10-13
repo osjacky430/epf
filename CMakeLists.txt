@@ -67,4 +67,4 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/epf-config-version.cmake cmake/epf-con
 # If the project does not define framework targets, and it can use CMake 3.23 or later for its minimum
 # version, file sets should be preferred. For all other cases, headers can be installed more generically
 # using install(FILES) or install(DIRECTORY) .
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/epf FILES_MATCHING PATTERN *.hpp)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN *.hpp)

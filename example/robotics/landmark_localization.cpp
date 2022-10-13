@@ -2,11 +2,11 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "component/measurement_model/landmark.hpp"
-#include "component/misc/map.hpp"
-#include "component/process_model/differential_drive.hpp"
-#include "core/measurement.hpp"
-#include "core/particle_filter.hpp"
+#include "epf/component/measurement_model/landmark.hpp"
+#include "epf/component/misc/map.hpp"
+#include "epf/component/process_model/differential_drive.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/particle_filter.hpp"
 #include "real_world/real_world.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <cstddef>

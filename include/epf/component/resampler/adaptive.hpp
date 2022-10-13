@@ -1,8 +1,8 @@
 #ifndef ADAPTIVE_RESAMPLER_HPP_
 #define ADAPTIVE_RESAMPLER_HPP_
 
-#include "core/measurement.hpp"
-
+#include "epf/core/measurement.hpp"
+#include "epf/util/math.hpp"
 #include <algorithm>
 #include <cassert>
 #include <random>
@@ -45,15 +45,7 @@ class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
     this->w_slow_ += this->alpha_slow_ * (w_avg - this->w_slow_);
     this->w_fast_ += this->alpha_fast_ * (w_avg - this->w_fast_);
 
-    auto const cumulative_weight = [&]() {
-      std::vector<double> ret_val = t_weight;
-      for (std::size_t i = 1; i < t_weight.size(); ++i) {
-        ret_val[i] += ret_val[i - 1];
-      }
-
-      return ret_val;
-    }();
-
+    auto const cumulative_weight = calculate_cumulative_weight(t_weight);
     if (cumulative_weight.back() == 0.0) {
       std::fill(t_weight.begin(), t_weight.end(), 1.0 / static_cast<double>(t_weight.size()));
     }

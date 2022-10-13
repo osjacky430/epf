@@ -1,9 +1,9 @@
 #ifndef RESIDUAL_RESAMPLER_HPP_
 #define RESIDUAL_RESAMPLER_HPP_
 
-#include "core/measurement.hpp"
-#include "core/state.hpp"
-#include "multinomial.hpp"
+#include "epf/component/resampler/multinomial.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/state.hpp"
 #include <cmath>
 #include <iterator>
 #include <range/v3/algorithm/fill_n.hpp>

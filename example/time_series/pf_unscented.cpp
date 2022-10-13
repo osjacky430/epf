@@ -2,9 +2,9 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "app/common.hpp"
-#include "core/measurement.hpp"
-#include "core/process.hpp"
+#include "epf/app/common.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/process.hpp"
 #include "pf_sim_cfg.hpp"
 #include <cmath>
 #include <cstddef>

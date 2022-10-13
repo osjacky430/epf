@@ -1,9 +1,9 @@
 #ifndef PARTICLE_FILTER_HPP_
 #define PARTICLE_FILTER_HPP_
 
-#include "component/importance_sampler/default.hpp"
-#include "component/resampler/multinomial.hpp"
-#include "enum.hpp"
+#include "epf/component/importance_sampler/default.hpp"
+#include "epf/component/resampler/multinomial.hpp"
+#include "epf/core/enum.hpp"
 #include "measurement.hpp"
 #include "process.hpp"
 #include "state.hpp"
@@ -87,6 +87,8 @@ class ParticleFilter : public ImportanceSampleStrategy, ResampleStrategy {
         continue;
       }
 
+      // we assumed that weight is already normalized here, @todo need to think
+      // whether we should make this assumption or not
       this->filter_updated_ = true;
       if (++this->sampled_time_ >= this->resample_frequency_) {
         this->sampled_time_ = 0;

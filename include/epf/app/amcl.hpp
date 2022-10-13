@@ -1,10 +1,10 @@
 #ifndef AMCL_HPP_
 #define AMCL_HPP_
 
-#include "component/resampler/adaptive.hpp"
-#include "component/sample_size_strategy/adaptive.hpp"
-#include "core/particle_filter.hpp"
-#include "util/traits.hpp"
+#include "epf/component/resampler/adaptive.hpp"
+#include "epf/component/sample_size_strategy/adaptive.hpp"
+#include "epf/core/particle_filter.hpp"
+#include "epf/util/traits.hpp"
 
 namespace epf::amcl {
 

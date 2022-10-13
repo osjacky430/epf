@@ -1,9 +1,8 @@
 #ifndef ADAPTIVE_SAMPLE_SIZE_HPP_
 #define ADAPTIVE_SAMPLE_SIZE_HPP_
 
-#include "core/kdtree.hpp"
-#include "util/traits.hpp"
-
+#include "epf/core/kdtree.hpp"
+#include "epf/util/traits.hpp"
 #include <algorithm>
 #include <boost/math/special_functions.hpp>
 #include <cassert>

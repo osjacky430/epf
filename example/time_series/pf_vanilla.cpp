@@ -9,7 +9,7 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "core/particle_filter.hpp"
+#include "epf/core/particle_filter.hpp"
 #include "pf_sim_cfg.hpp"
 #include "time_series.hpp"
 #include <algorithm>

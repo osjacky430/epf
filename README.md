@@ -21,23 +21,23 @@ There are countless of literatures, papers talking about particle filter. Terms 
 ## State-Space Model
 Consider a general, non-linear state-space model:
 
-$\textbf{x}_{t} = f\,(\textbf{x}_{t-1}, \textbf{u}_{t}, \textbf{v}_{t-1})$  
-$\textbf{y}_{t} = h\,(\textbf{x}_{t}, \textbf{u}_{t}, \textbf{n}_{t})$  
+$\bf{x}_{t} = f\,(\bf{x}_{t-1}, \bf{u}_{t}, \bf{v}_{t-1})$  
+$\bf{y}_{t} = h\,(\bf{x}_{t}, \bf{u}_{t}, \bf{n}_{t})$  
 
 where:
 
-$ \textbf{x}_{t} $ : state of the system at time t, with covariance $ \textbf{P}_{\textbf{x}\textbf{x}} $  
-$ \textbf{y}_{t} $ : observation, with covariance $ \textbf{P}_{\textbf{y}\textbf{y}} $  
-$ \textbf{u}_{t} $ : input  
-$ \textbf{v}_{t} $ : process noise, with noise covariance $ \textbf{Q}_{t} $  
-$ \textbf{n}_{t} $ : observation noise with noise covariance $ \textbf{R}_{t} $
+$ \bf{x}_{t} $ : state of the system at time t, with covariance $ \bf{P}_{\bf{x}\bf{x}} $  
+$ \bf{y}_{t} $ : observation, with covariance $ \bf{P}_{\bf{y}\bf{y}} $  
+$ \bf{u}_{t} $ : input  
+$ \bf{v}_{t} $ : process noise, with noise covariance $ \bf{Q}_{t} $  
+$ \bf{n}_{t} $ : observation noise with noise covariance $ \bf{R}_{t} $
 
 The general state-space model can be broken down into a state transition and state measuremment model, these two probabilities are calculated during `(unify this term!)` in `epf::ProcesssModel` and `epf::MeasurementModel`, respectively:  
 
-- $ p\,(\textbf{x}_t\,|\,\textbf{x}_{t-1}\,,\,\textbf{u}_{t}) $
-- $ p\,(\textbf{y}_{t}\,|\,\textbf{x}_{t}) $
+- $ p\,(\bf{x}_t\,|\,\bf{x}_{t-1}\,,\,\bf{u}_{t}) $
+- $ p\,(\bf{y}_{t}\,|\,\bf{x}_{t}) $
 
-The estimation of the state $ \textbf{x}_{t} $ is expressed as conditional probability, sometimes referred to as belief, $ p\,(\textbf{x}_{t}\,|\,\textbf{ y}_{1:t},\,\textbf{u}_{1:t}) $. Assume that the state $ \textbf{x}_{t} $ is *complete* (or is a Markov process), meaning that the past states, measurements, or controls provide no additional information that would help us predict the future more accurately, $ p\,(\textbf{x}_{t}\,|\,\textbf{ y}_{1:t}\,,\,\textbf{u}_{1:t}) = p\,(\textbf{x}_t\,|\,\textbf{y}_t\,,\,\textbf{u}_t) $, this posterior probability is the target particle filter aims to approximate. (see (Intelligent Robotics and Autonomous Agents) Sebastian Thrun_ Wolfram Burgard_ Dieter Fox - Probabilistic Robotics-Mit Press (2005))
+The estimation of the state $ \bf{x}_{t} $ is expressed as conditional probability, sometimes referred to as belief, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t},\,\bf{u}_{1:t}) $. Assume that the state $ \bf{x}_{t} $ is *complete* (or is a Markov process), meaning that the past states, measurements, or controls provide no additional information that would help us predict the future more accurately, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t}\,,\,\bf{u}_{1:t}) = p\,(\bf{x}_t\,|\,\bf{y}_t\,,\,\bf{u}_t) $, this posterior probability is the target particle filter aims to approximate. (see (Intelligent Robotics and Autonomous Agents) Sebastian Thrun_ Wolfram Burgard_ Dieter Fox - Probabilistic Robotics-Mit Press (2005))
 
 Particle filter is widely used in engineering, such as robotics, signal processing, etc. (reference). Therefore, EPF also implemented some often-used process models and measurement models, see `component\process_model\` and `component\measurement_model\` for more detail (p.s. more implementations are welcome!).
 
@@ -60,9 +60,9 @@ flowchart LR
 
 ### Importance Sampling
 
-As mentioned previously, our goal is to approximate the state at time *t*. Unfortunately, it is often impossible to sample directly from the posterior distribution. However, we can overcome this difficulty by sampling from a known, easy-to-sample, **proposal distribution**, $ q\,(\,\textbf{x}_{0:t}\,|\,\,\textbf{y}_{1:t}\,) $ , with importance weight $ w_t \propto \frac{p (\textbf{y}_{t}|\textbf{x}_{t})\,\cdot\,p(\textbf{x}_t|\textbf{x}_{t-1})}{q(\textbf{x}_t|\textbf{x}_{0:t-1},\textbf{y}_{1:t})} $.
+As mentioned previously, our goal is to approximate the state at time *t*. Unfortunately, it is often impossible to sample directly from the posterior distribution. However, we can overcome this difficulty by sampling from a known, easy-to-sample, **proposal distribution**, $ q\,(\,\bf{x}_{0:t}\,|\,\,\bf{y}_{1:t}\,) $ , with importance weight $ w_t \propto \frac{p (\bf{y}_{t}|\bf{x}_{t})\,\cdot\,p(\bf{x}_t|\bf{x}_{t-1})}{q(\bf{x}_t|\bf{x}_{0:t-1},\bf{y}_{1:t})} $.
 
-The implementation of the proposal distribution is under directory `component\importance_sampler`, the default importance sampling strategy is $ q(\textbf{x}_t|\textbf{x}_{0:t-1},\textbf{y}_{1:t}) = p(\textbf{x}_t|\textbf{x}_{t-1}) $, i.e., importance weight $ w_t \propto p (\textbf{y}_{t}|\textbf{x}_{t}) $, see `component\importance_sampler\default.hpp`
+The implementation of the proposal distribution is under directory `component\importance_sampler`, the default importance sampling strategy is $ q(\bf{x}_t|\bf{x}_{0:t-1},\bf{y}_{1:t}) = p(\bf{x}_t|\bf{x}_{t-1}) $, i.e., importance weight $ w_t \propto p (\bf{y}_{t}|\bf{x}_{t}) $, see `component\importance_sampler\default.hpp`
 
 ### Resampling
 

@@ -1,10 +1,10 @@
 #ifndef PROCESS_MODEL_HPP_
 #define PROCESS_MODEL_HPP_
 
-#include "core/state.hpp"
-#include "enum.hpp"
-#include "util/exceptions.hpp"
-#include "util/traits.hpp"
+#include "epf/core/enum.hpp"
+#include "epf/core/state.hpp"
+#include "epf/util/exceptions.hpp"
+#include "epf/util/traits.hpp"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <array>

@@ -1,8 +1,8 @@
 #ifndef LASER_BEAM_HPP_
 #define LASER_BEAM_HPP_
 
-#include "component/misc/map.hpp"
-#include "core/measurement.hpp"
+#include "epf/component/misc/map.hpp"
+#include "epf/core/measurement.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <optional>
 #include <random>

@@ -1,7 +1,7 @@
 #ifndef TIME_SERIES_HPP_
 #define TIME_SERIES_HPP_
 
-#include "core/state.hpp"
+#include "epf/core/state.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <random>
 #include <vector>
