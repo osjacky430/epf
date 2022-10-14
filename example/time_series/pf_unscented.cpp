@@ -19,7 +19,7 @@ int main(int /**/, char** /**/) {
   using namespace time_series;
 
   Simulator<F> simulator{F::State{1.0}, TIME_STEP, 1};
-  auto upf_tup = simulator.create_particle_filter<epf::UPF<F::State, F::Output>>(PARTICLE_COUNT);
+  auto upf_tup = simulator.create_particle_filter<epf::UnscentedPF<F::State, F::Output>>(PARTICLE_COUNT);
 
   auto& upf = std::get<0>(upf_tup);
   upf.set_alpha(1);

@@ -53,6 +53,11 @@ inline std::vector<double> calculate_cumulative_weight(std::vector<double> const
   return ret_val;
 }
 
+inline constexpr auto weighted_sum = [](auto const& t_state, auto const& t_weight_state_pair) noexcept {
+  auto const& [state, weight] = t_weight_state_pair;
+  return t_state + weight * state;
+};
+
 }  // namespace epf
 
 #endif

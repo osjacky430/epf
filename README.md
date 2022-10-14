@@ -11,6 +11,7 @@ Particle filter has been studied since 20th century. Various improvements are pr
     - [Importance Sampling](#importance-sampling)
     - [Resampling](#resampling)
   - [Particle (State) Concept](#particle-state-concept)
+- [Getting Started](#getting-started)
 - [TODO](#todo)
 - [Reference](#reference)
 
@@ -71,6 +72,8 @@ Importance sampling along can't do much since it will degenerate with time (see 
 ## Particle (State) Concept
 
 The Particle Concept describes the requirement for a particle type. The requirements are checked by each component, e.g. `epf::Differential`, `epf::ParticleFilter`. Refer to each component for actual requirement.
+
+# Getting Started
 
 # TODO
 1. support multi-thread or coroutine

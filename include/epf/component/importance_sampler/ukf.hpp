@@ -137,11 +137,6 @@ class UKFSampler {
     auto const mean_weight = concat(single(mean_pt0_weight), repeat(sigma_pt_weight));
     auto const cov_weight  = concat(single(cov_pt0_weight), repeat(sigma_pt_weight));
 
-    auto const weighted_sum = [](auto const& t_lhs, auto const& t_rhs) {
-      auto const& [pt, weight] = t_rhs;
-      return t_lhs + pt * weight;
-    };
-
     for (auto [state, weight, cov] : zip(t_prev, t_weight, this->covariances_)) {
       Eigen::LLT<AugmentedCovMatrix> cholesky_solver{(N_X + lambda) * cov};
       auto const& P_sqrt = cholesky_solver.matrixLLT();

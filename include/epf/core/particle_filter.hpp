@@ -96,10 +96,6 @@ class ParticleFilter : public ImportanceSampleStrategy, ResampleStrategy {
       }
     }
 
-    auto const weighted_sum = [](StateVector const& t_left, auto const& t_right) {
-      return t_left + t_right.first * t_right.second;
-    };
-
     StateVector res = StateVector::Zero();
     res = ranges::accumulate(ranges::views::zip(this->previous_states_, this->state_weights_), res, weighted_sum);
     return from_state_vector<State>(res);
