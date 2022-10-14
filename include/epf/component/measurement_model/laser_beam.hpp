@@ -3,6 +3,7 @@
 
 #include "epf/component/misc/map.hpp"
 #include "epf/core/measurement.hpp"
+#include "epf/core/state.hpp"
 #include <boost/math/constants/constants.hpp>
 #include <optional>
 #include <random>
@@ -30,6 +31,8 @@ struct BeamModelParam {
  */
 template <typename SensorData, typename State>
 class LaserBeamModel final : public MeasurementModel<State> {
+  using StateVector = typename StateTraits<State>::ArithmeticType;
+
   Measurement<SensorData>* sensor_ = nullptr;
   LocationMap<Dimension<2>>* map_  = nullptr;
 
@@ -37,8 +40,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
 
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
 
-  /*!< Laser position relative to the robot, we assumed that State::ValueType has the meaning of "pose" */
-  typename State::ValueType laser_pose_{};
+  StateVector laser_pose_{}; /*!< Laser position relative to the robot */
   double max_range_ = 0.0;
 
   double z_hit_     = 0.0; /*!< Correct range with local measurement noise */
@@ -69,7 +71,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
   /**
    *  @brief
    */
-  MeasurementResult update(std::vector<State>& t_states, std::vector<double>& t_weight) override {
+  MeasurementResult update(std::vector<StateVector>& t_states, std::vector<double>& t_weight) override {
     double weight_sum      = 0.0;
     SensorData income_meas = this->sensor_->get_measurement();
     for (auto [state, weight] : ranges::views::zip(t_states, t_weight)) {
@@ -83,7 +85,6 @@ class LaserBeamModel final : public MeasurementModel<State> {
 
         auto const diff = t_laser_data.first - theoretical_range;
 
-        // TODO: investigate why no normalization needed
         auto const p_hit   = std::exp(-(diff * diff) / 2.0 * this->sigma_hit_ * this->sigma_hit_);
         auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * t_laser_data.first);
         auto const p_max   = static_cast<int>(t_laser_data.first >= this->max_range_);

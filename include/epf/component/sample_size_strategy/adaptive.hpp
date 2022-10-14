@@ -2,6 +2,7 @@
 #define ADAPTIVE_SAMPLE_SIZE_HPP_
 
 #include "epf/core/kdtree.hpp"
+#include "epf/core/state.hpp"
 #include "epf/util/traits.hpp"
 #include <algorithm>
 #include <boost/math/special_functions.hpp>
@@ -34,8 +35,12 @@ struct DefaultTreeComp {
 
 template <typename State, typename TreeComp = DefaultTreeComp>
 class KLDSampling {
-  std::array<double, dimension_v<State>> bin_size_;
-  static constexpr auto DEFAULT_EPSILON = 0.01;
+  using StateVector = typename StateTraits<State>::ArithmeticType;
+
+  static inline constexpr auto STATE_DIM       = StateTraits<State>::Dimension::value;
+  static inline constexpr auto DEFAULT_EPSILON = 0.01;
+
+  Eigen::Array<double, STATE_DIM, 1> bin_size_;
 
   /* !< Maximum allowed error (K-L distance) between true and estimated distribution */
   double epsilon_ = DEFAULT_EPSILON;
@@ -44,7 +49,7 @@ class KLDSampling {
   // with probability p (i.e. within mu + z_{1-p} with probability 1 - p), and will lie outside the interval [mu -
   // z_{1-p} * sigma, mu + z_{1-p} * sigma] with the probability 2 * p. (p is changed to 1 - p to match the notation
   // used in the paper), default upper quantile = 3 corresponds to p = 0.001, i.e. 1 - p = 0.999
-  static constexpr auto DEFAULT_UPPER_QUANTILE = 3;
+  static inline constexpr auto DEFAULT_UPPER_QUANTILE = 3;
 
   /* !< z_{1-p}, upper quantile of standard normal distribution N(0, 1). where 1 - p is the probability that K-L
    *    distance between MLE and the true distribution is smaller than epsilon */
@@ -73,7 +78,7 @@ class KLDSampling {
    *
    *  [1] Fox, Dieter. "Adapting the Sample Size in Particle Filters Through KLD-Sampling"
    */
-  [[nodiscard]] std::size_t calculate_particle_size(std::vector<State> const& t_particles) noexcept {
+  [[nodiscard]] std::size_t calculate_particle_size(std::vector<StateVector> const& t_particles) noexcept {
     this->kdtree_.clear();
 
     std::for_each(t_particles.begin(), t_particles.end(),

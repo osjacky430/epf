@@ -1,6 +1,7 @@
 #ifndef DIFFERENTIAL_DRIVE_HPP_
 #define DIFFERENTIAL_DRIVE_HPP_
 
+#include "epf/component/concept/pose.hpp"
 #include "epf/core/measurement.hpp"
 #include "epf/core/process.hpp"
 #include "epf/core/state.hpp"
@@ -17,21 +18,6 @@ struct DifferentialDriveParam {
   std::array<double, 2> alpha_trans_;
   PoseData initial_pose_;
   PoseDataDiff threshold_;
-};
-
-// temporary, not sure if this is the best api
-template <typename State>
-struct DifferentialModelStateConcept {  // NOLINT(*-special-member-functions), because this class is not meant to be
-                                        // instantiated
-  BOOST_CONCEPT_USAGE(DifferentialModelStateConcept) {
-    using StateValue  = typename StateTraits<State>::ValueType;
-    using StateVector = typename StateTraits<State>::ArithmeticType;
-
-    StateVector s{};
-    [[maybe_unused]] StateValue& ref_x = x_coor<State>(s);
-    [[maybe_unused]] StateValue& ref_y = y_coor<State>(s);
-    [[maybe_unused]] StateValue& ret_w = w_coor<State>(s);
-  }
 };
 
 /**
@@ -58,7 +44,7 @@ class Differential final : public ProcessModel<State> {
   std::array<double, 2> alpha_trans_ = {0, 0};
 
   static_assert(has_subscript_operator<PoseData>::value);
-  BOOST_CONCEPT_ASSERT((DifferentialModelStateConcept<State>));
+  BOOST_CONCEPT_ASSERT((Pose2DConcept<State>));
 
  public:
   Differential() = default;

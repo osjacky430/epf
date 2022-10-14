@@ -58,6 +58,12 @@ inline constexpr auto weighted_sum = [](auto const& t_state, auto const& t_weigh
   return t_state + weight * state;
 };
 
+template <typename V, std::size_t Dim>
+inline Eigen::Vector<V, Dim> transform_coordinate(Eigen::Vector<V, Dim> const& t_start,
+                                                  Eigen::Vector<V, Dim> const& t_dir) {
+  //
+}
+
 }  // namespace epf
 
 #endif
