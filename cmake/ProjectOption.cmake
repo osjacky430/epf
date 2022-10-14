@@ -11,7 +11,18 @@ include(CompilerWarning)
 include(Coverage)
 
 function (configure_project_target)
-  cmake_parse_arguments("" "" "TARGET" "" ${ARGN})
+  cmake_parse_arguments("" "" "TARGET;CXX_STD" "" ${ARGN})
+
+  # not sure if this is sufficient
+  if (CMAKE_CXX_STANDARD)
+    if (NOT _CXX_STD)
+      target_compile_features(${_TARGET} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+    else ()
+      target_compile_features(${_TARGET} INTERFACE cxx_std_${_CXX_STD})
+    endif ()
+  elseif (_CXX_STD)
+    target_compile_features(${_TARGET} INTERFACE cxx_std_${_CXX_STD})
+  endif ()
 
   target_include_directories(${_TARGET} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
   target_compile_options(
@@ -43,7 +54,7 @@ function (configure_project_option)
   cmake_parse_arguments(CLANG_TIDY "" "" "EXTRA_ARG;EXTRA_OPTIONS" "${GRP_CLANG_TIDY}")
   cmake_parse_arguments(VS_ANALYSIS "" "" "RULE_SETS" "${GRP_VS_ANALYSIS}")
   cmake_parse_arguments(SANITIZER "" "TARGET" "" "${GRP_SANITIZER}")
-  cmake_parse_arguments(PROJ "" "TARGET" "" "${GRP_PROJ_TARGET}")
+  cmake_parse_arguments(PROJ "" "TARGET;CXX_STD" "" "${GRP_PROJ_TARGET}")
   cmake_parse_arguments(IPO "" "" "DISABLE_FOR_CONFIG" "${GRP_IPO}")
 
   foreach (target_name ${WARNING_TARGET} ${LINKER_TARGET} ${SANITIZER_TARGET} ${PROJ_TARGET})

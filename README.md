@@ -3,7 +3,6 @@
 Particle filter has been studied since 20th century. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problem. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
 
 # Table of content
-- [EPF - Extendable Particle Filter](#epf---extendable-particle-filter)
 - [Table of content](#table-of-content)
 - [Terminologies](#terminologies)
   - [State-Space Model](#state-space-model)
@@ -38,7 +37,7 @@ The general state-space model can be broken down into a state transition and sta
 - $ p\,(\bf{x}_t\,|\,\bf{x}_{t-1}\,,\,\bf{u}_{t}) $
 - $ p\,(\bf{y}_{t}\,|\,\bf{x}_{t}) $
 
-The estimation of the state $ \bf{x}_{t} $ is expressed as conditional probability, sometimes referred to as belief, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t},\,\bf{u}_{1:t}) $. Assume that the state $ \bf{x}_{t} $ is *complete* (or is a Markov process), meaning that the past states, measurements, or controls provide no additional information that would help us predict the future more accurately, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t}\,,\,\bf{u}_{1:t}) = p\,(\bf{x}_t\,|\,\bf{y}_t\,,\,\bf{u}_t) $, this posterior probability is the target particle filter aims to approximate. (see (Intelligent Robotics and Autonomous Agents) Sebastian Thrun_ Wolfram Burgard_ Dieter Fox - Probabilistic Robotics-Mit Press (2005))
+The estimation of the state $ \bf{x}_{t} $ is expressed as conditional probability, sometimes referred to as belief, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t},\,\bf{u}_{1:t}) $. Assume that the state $ \bf{x}_{t} $ is *complete* (or is a Markov process), meaning that the past states, measurements, or controls provide no additional information that would help us predict the future more accurately, $ p\,(\bf{x}_{t}\,|\,\bf{ y}_{1:t}\,,\,\bf{u}_{1:t}) $ $ = p\,(\bf{x}_t\,|\,\bf{y}_t\,,\,\bf{u}_t) $, this posterior probability is the target particle filter aims to approximate. (see (Intelligent Robotics and Autonomous Agents) Sebastian Thrun_ Wolfram Burgard_ Dieter Fox - Probabilistic Robotics-Mit Press (2005))
 
 Particle filter is widely used in engineering, such as robotics, signal processing, etc. (reference). Therefore, EPF also implemented some often-used process models and measurement models, see `component\process_model\` and `component\measurement_model\` for more detail (p.s. more implementations are welcome!).
 

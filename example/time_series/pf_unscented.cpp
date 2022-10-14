@@ -13,7 +13,6 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/drop.hpp>
 #include <range/v3/view/transform.hpp>
-#include <type_traits>
 
 int main(int /**/, char** /**/) {
   using namespace time_series;
