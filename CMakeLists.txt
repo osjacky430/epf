@@ -12,10 +12,6 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" "${CMAKE_BINARY_DIR}")
 include(ProjectOption)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 # cmake-format: off
 configure_project_option(
   WARNINGS
@@ -30,6 +26,7 @@ configure_project_option(
     DISABLE_FOR_CONFIG Debug Coverage
   PROJ_TARGET
     TARGET epf
+    CXX_STD 17
 )
 # cmake-format: on
 

@@ -21,8 +21,15 @@ function (configure_project_target)
       target_compile_features(${_TARGET} INTERFACE cxx_std_${_CXX_STD})
     endif ()
   elseif (_CXX_STD)
+    message(STATUS "Project CXX_STD is specified, but CMAKE_CXX_STANDARD isn't,
+        setting CMAKE_CXX_STANDARD to ensure project-wide language requirement")
+    set(CMAKE_CXX_STANDARD ${_CXX_STD})
+
     target_compile_features(${_TARGET} INTERFACE cxx_std_${_CXX_STD})
   endif ()
+
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
   target_include_directories(${_TARGET} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
   target_compile_options(
@@ -64,6 +71,7 @@ function (configure_project_option)
   endforeach ()
 
   configure_project_setting()
+  configure_project_target(TARGET ${PROJ_TARGET} CXX_STD ${PROJ_CXX_STD})
   configure_compiler_cache(${CCACHE_CCACHE_BASE_DIR})
   configure_project_warnings(TARGET ${WARNING_TARGET} WARNINGS ${WARNING_PROJECT_WARNINGS})
   configure_linker(TARGET ${LINKER_TARGET} LINKER_NAME ${LINKER_LINKER_NAME} LINKER_PATH ${LINKER_LINKER_PATH})
@@ -87,5 +95,4 @@ function (configure_project_option)
   endif ()
 
   configure_package_manager()
-  configure_project_target(TARGET ${PROJ_TARGET})
 endfunction ()

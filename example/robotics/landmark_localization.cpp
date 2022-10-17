@@ -171,7 +171,7 @@ int main(int /**/, char** /**/) {
   landmark_model->set_bearing_variance(CAMERA_BEARING_VARIANCE);
   landmark_model->set_range_variance(CAMERA_RANGE_VARIANCE);
 
-  auto* const diff_drive_model = pf.set_process_model<epf::Differential<OdomData, State>>();
+  auto* const diff_drive_model = pf.set_process_model<epf::DifferentialDrive<OdomData, State>>();
   diff_drive_model->set_pose(OdomData{INITIAL_POSE});
   diff_drive_model->set_alpha_rot(DIFFERENTIAL_DRIVE_ALPHA_ROT);
   diff_drive_model->set_alpha_trans(DIFFERENTIAL_DRIVE_ALPHA_TRANS);

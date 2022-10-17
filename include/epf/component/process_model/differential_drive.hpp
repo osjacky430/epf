@@ -21,16 +21,15 @@ struct DifferentialDriveParam {
 };
 
 /**
- *  @brief  This class is a concrete implementation of differential drive process model on flat surface
+ *  @brief  This class is a concrete implementation of DifferentialDrive drive process model on flat surface
  *
  *  @tparam PoseData  Data structure for odometry data, required to implement subscript operator, representing [x,
  *                    y, w]. (coordinate, not displacement)
- *  @tparam State Data structure for state estimation, required to implement function x(), y(), and w(), that return
- *                reference to [x, y, w] variable.
+ *  @tparam State Data structure for state estimation
  *
  */
 template <typename PoseData, typename State>
-class Differential final : public ProcessModel<State> {
+class DifferentialDrive final : public ProcessModel<State> {
   using PoseDataDiff = PoseData;
   using StateVector  = typename StateTraits<State>::ArithmeticType;
 
@@ -43,12 +42,14 @@ class Differential final : public ProcessModel<State> {
   std::array<double, 2> alpha_rot_   = {0, 0};
   std::array<double, 2> alpha_trans_ = {0, 0};
 
+  // some thought: why enforce subscript operator instead of x_coor<> specialization
   static_assert(has_subscript_operator<PoseData>::value);
   BOOST_CONCEPT_ASSERT((Pose2DConcept<State>));
 
  public:
-  Differential() = default;
-  Differential(DifferentialDriveParam<PoseData, PoseDataDiff> const& t_param, Measurement<PoseData>* const t_odom_meas)
+  DifferentialDrive() = default;
+  DifferentialDrive(DifferentialDriveParam<PoseData, PoseDataDiff> const& t_param,
+                    Measurement<PoseData>* const t_odom_meas)
     : alpha_rot_(t_param.alpha_rot_),
       alpha_trans_(t_param.alpha_trans_),
       previous_{t_param.initial_pose_},
@@ -90,11 +91,11 @@ class Differential final : public ProcessModel<State> {
       // original model assumes that the robot will turn to move_direction, move to destination, then rotate to final
       // orientation. However, we don't necessary need to turn to move_direction, we could also turn to its complement
       // angle, i.e. pi - move_direction, and move "backward" toward destination. This may improve the modelling
-      // accuracy since the more unnecessary moves we did, the more noise comes into play (due to bigger var_rot1 and
-      // var_rot2). Also, we normally choose the most efficient way to move the robot, so this should be more intuitive.
-      // Notice that we don't need to follow the actual velocity cmd, since this model is based on odometry measurement,
-      // instead of velocity. Therefore any assumption should work, as long as the odometry diff is satisfied, the only
-      // difference is the distribution of propagated particles.
+      // accuracy since the more unnecessary moves we take into consideration, the more noise comes into play (due to
+      // bigger var_rot1 and var_rot2). Also, we normally choose the most efficient way to move the robot, so this
+      // should be more intuitive. Notice that we don't need to follow the actual velocity cmd, since this model is
+      // based on odometry measurement, instead of velocity. Therefore any assumption should work, as long as the
+      // odometry diff is satisfied, the only difference is the distribution of propagated particles.
       auto const move_direction = constraint_angle(std::atan2(diff_y, diff_x) - this->previous_[2]);
       if (std::abs(move_direction) > std::abs(boost::math::double_constants::pi - move_direction)) {
         return std::pair{boost::math::double_constants::pi - move_direction, -1.0};
@@ -106,11 +107,13 @@ class Differential final : public ProcessModel<State> {
     double const rot1_sign  = std::get<1>(delta_rot_tup);
     double const delta_rot2 = constraint_angle(diff_w - delta_rot1);
 
-    // ros-navigation calculate variance differently, and that is totally fine, because these variances can be tuned
-    // with alpha1 ~ alpha4, different ways of calculation simply means different suitable parameters.
-    double const var_rot1  = this->alpha_rot_[0] * std::abs(delta_rot1) + this->alpha_rot_[1] * std::abs(delta_trans);
-    double const var_rot2  = this->alpha_rot_[0] * std::abs(delta_rot2) + this->alpha_rot_[1] * std::abs(delta_trans);
-    double const var_trans = this->alpha_trans_[0] * std::abs(delta_trans) + this->alpha_trans_[1] * std::abs(diff_w);
+    double const drot1_sqr  = std::pow(delta_rot1, 2);
+    double const drot2_sqr  = std::pow(delta_rot2, 2);
+    double const dtrans_sqr = std::pow(delta_trans, 2);
+
+    double const var_rot1  = this->alpha_rot_[0] * drot1_sqr + this->alpha_rot_[1] * dtrans_sqr;
+    double const var_rot2  = this->alpha_rot_[0] * drot2_sqr + this->alpha_rot_[1] * dtrans_sqr;
+    double const var_trans = this->alpha_trans_[0] * dtrans_sqr + this->alpha_trans_[1] * (drot1_sqr + drot2_sqr);
 
     auto rot_dist1  = std::normal_distribution<>(0, std::sqrt(var_rot1));
     auto rot_dist2  = std::normal_distribution<>(0, std::sqrt(var_rot2));

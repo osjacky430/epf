@@ -70,12 +70,12 @@ Importance sampling along can't do much since it will degenerate with time (see 
 
 ## Particle (State) Concept
 
-The Particle Concept describes the requirement for a particle type. The requirements are checked by each component, e.g. `epf::Differential`, `epf::ParticleFilter`. Refer to each component for actual requirement.
+The Particle Concept describes the requirement for a particle type. The requirements are checked by each component, e.g. `epf::DifferentialDrive`, `epf::ParticleFilter`. Refer to each component for actual requirement.
 
 # Getting Started
 
 # TODO
-1. support multi-thread or coroutine
+1. support multi-thread or coroutine (make example benchmarkable first...)
 2. make it harder to misuse (this is a bit vague, basically, I need to come back to some classes since some of them should be treated specially, but I haven't think about it thoroughly)
 3. make it easy to install
 4. adapt to ros (this can only be done after #3)

@@ -16,11 +16,12 @@ struct DefaultTreeComp {
   template <typename State>
   bool operator()(State const& t_lhs, State const& t_rhs,
                   std::pair<double, std::size_t>* const t_pivot) const noexcept {
-    if (t_pivot->second < dimension_t<State>::value) {
+    constexpr auto STATE_DIM = StateTraits<State>::Dimension::value;
+    if (t_pivot->second < STATE_DIM) {
       return t_pivot->first < t_rhs[t_pivot->second];
     }
 
-    for (std::size_t idx = 0; idx < dimension_t<State>::value; ++idx) {
+    for (std::size_t idx = 0; idx < STATE_DIM; ++idx) {
       if (auto const abs_val = std::abs(t_lhs[idx] - t_rhs[idx]); abs_val > t_pivot->first) {
         t_pivot->first  = abs_val;
         t_pivot->second = idx;
