@@ -1,6 +1,6 @@
 # EPF - Extendable Particle Filter
 
-Particle filter has been studied since 20th century. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problem. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
+Particle filter has been studied since 20th century. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problems. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
 
 # Table of content
 - [Table of content](#table-of-content)
@@ -53,7 +53,7 @@ flowchart LR
   end
   subgraph main_algo["t = 1,2,3,..."]
     direction LR
-    IS["Importance Sampling"] --> R["Resampling"]
+    IS["Importance Sampling"] --> R["Resampling"] --> RS["Resample Move (Optional)"]
   end
   init --> main_algo --> Output
 ```
@@ -68,6 +68,10 @@ The implementation of the proposal distribution is under directory `component\im
 
 Importance sampling along can't do much since it will degenerate with time (see THE UNSCENTED PARTICLE FILTER), luckily, with the inclusion of resampling stage, particle filter is finally a practical filter. The basic idea is that, resampling stage draws particle from importance sampling according to their importance weight, i.e., particles with higher weights will stay, whereas lower one will be discarded (kinda like the Darwinian idea of survival of the fittest). Different resampling strategies may affect the "performace" of the particle filter (though the author in THE UNSCENTED PARTICLE FILTER found that those do not affect the "performace" of it). Nevertheless, EPF implements different resampling strategy under directory `component\resampler`, the default strategy uses multinomial sampling. (see reference)
 
+### Resample-Move
+
+Resampling stage picks the fittest particles according to importance weight, this means that the resulting particle set may contain multiple copies (or "children" in some literatures) from one particle. This is normally fine because in next iteration, the process noise will kick in, spreading the particles out. However, if the process noise is small... (todo: finish this)
+
 ## Particle (State) Concept
 
 The Particle Concept describes the requirement for a particle type. The requirements are checked by each component, e.g. `epf::DifferentialDrive`, `epf::ParticleFilter`. Refer to each component for actual requirement.
@@ -77,9 +81,11 @@ The Particle Concept describes the requirement for a particle type. The requirem
 # TODO
 1. support multi-thread or coroutine (make example benchmarkable first...)
 2. make it harder to misuse (this is a bit vague, basically, I need to come back to some classes since some of them should be treated specially, but I haven't think about it thoroughly)
-3. make it easy to install
+3. make it easy to install, or let user specify what group of header to install (e.g. unscentedPF target, extendedPF target)
 4. adapt to ros (this can only be done after #3)
 5. more example
+6. need to understand prng in c++ library (am I using it correctly?)
+7. high dimensional state benchmarking (?)
 
 # Reference
 1. particle-filter-tutorial

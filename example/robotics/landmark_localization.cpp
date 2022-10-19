@@ -2,6 +2,7 @@
 #include <matplot/matplot.h>
 #endif
 
+#include "epf/app/common.hpp"
 #include "epf/component/measurement_model/landmark.hpp"
 #include "epf/component/misc/map.hpp"
 #include "epf/component/process_model/differential_drive.hpp"
@@ -163,7 +164,7 @@ int main(int /**/, char** /**/) {
   LandmarkMapInterface map{landmarks};
   CamMeasurement sensor{&world};
   OdomMeasurement odom{&bot};
-  epf::ParticleFilter<State> pf(State{INITIAL_POSE});
+  epf::VanillaPF<State> pf(State{INITIAL_POSE});
 
   auto* const landmark_model = pf.add_measurement_model<epf::LandmarkModel<LandmarkMeasurement, State>>();
   landmark_model->attach_sensor(&sensor);

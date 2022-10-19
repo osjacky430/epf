@@ -1,13 +1,16 @@
 #ifndef PARTICLE_FILTER_HPP_
 #define PARTICLE_FILTER_HPP_
 
-#include "epf/component/importance_sampler/default.hpp"
-#include "epf/component/resampler/multinomial.hpp"
+#include "epf/component/resampler/resampler.hpp"
 #include "epf/core/enum.hpp"
-#include "measurement.hpp"
-#include "process.hpp"
-#include "state.hpp"
+#include "epf/core/measurement.hpp"
+#include "epf/core/process.hpp"
+#include "epf/core/state.hpp"
+#include "epf/util/math.hpp"
+#include "epf/util/traits.hpp"
 #include <memory>
+#include <range/v3/algorithm/fill.hpp>
+#include <range/v3/algorithm/generate.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/zip.hpp>
 #include <type_traits>
@@ -25,45 +28,40 @@ namespace epf {
  *  [2] Pitt MK, Shephard N. 1999. Filtering via simulation: auxiliary particle filters. Journal of the American
  *      Statistical Association 94: 590–599.
  */
-template <typename State, typename ImportanceSampleStrategy = DefaultSampler<State>,
-          typename ResampleStrategy = MultinomialResample<State>>
-class ParticleFilter : public ImportanceSampleStrategy, ResampleStrategy {
- private:
-  std::size_t sampled_time_ = 0; /*!< particle filter has sampled for this amount of time, this will get reset everytime
-                                      resampling takes place */
-  std::size_t resample_frequency_ = 1; /*!< do resample after sampling for this amount of time, resample_frequency_ <= 1
-                                          means to force resample everytime sampling takes place */
-  bool filter_updated_ = false;
-
-  std::unique_ptr<ProcessModel<State>> motion_{};
-  std::vector<std::shared_ptr<MeasurementModel<State>>> sensors_{};  // TODO: change to unique_ptr
-
+template <typename State, typename ImportanceSampleStrategy, typename ResampleStrategy, typename MCMCStrategy = void>
+class ParticleFilter : public ImportanceSampleStrategy, public ResampleStrategy {
+  static_assert(is_specialization_of<Resampler, ResampleStrategy>);
   BOOST_CONCEPT_ASSERT((BasicStateConcept<State>));
 
  protected:
   using StateTrait  = StateTraits<State>;
   using StateVector = typename StateTrait::ArithmeticType;
 
- private:
-  std::vector<typename StateTrait::ArithmeticType> previous_states_{};
-  std::vector<double> state_weights_{};
-
- protected:
   using ImportanceSampleStrategy::importance_sampling;
   using ResampleStrategy::resample;
 
-  auto get_all_measurement() const noexcept { return this->sensors_; }
-  auto get_process_model() const noexcept { return this->motion_.get(); }
+  [[nodiscard]] auto get_all_measurement() const noexcept { return this->sensors_; }  // const& ?
+  [[nodiscard]] auto get_process_model() const noexcept { return this->motion_.get(); }
+
+ private:
+  bool filter_updated_ = false;
+
+  std::unique_ptr<ProcessModel<State>> motion_{};
+  std::vector<std::shared_ptr<MeasurementModel<State>>> sensors_{};  // TODO: change to unique_ptr
+
+  std::vector<typename StateTrait::ArithmeticType> previous_states_{};
+  std::vector<double> state_weights_{};
 
  public:
-  static constexpr auto DEFAULT_MIN_PARTICLE_COUNTS = 100;
-  static constexpr auto DEFAULT_MAX_PARTICLE_COUNTS = 2000;
+  static constexpr auto DEFAULT_PARTICLE_COUNTS = 2000;
 
-  void set_resample_frequency(std::size_t const t_freq) noexcept { this->resample_frequency_ = t_freq; }
+  explicit ParticleFilter(State t_initial_state, std::size_t const t_particle_counts = DEFAULT_PARTICLE_COUNTS)
+    : previous_states_(t_particle_counts, to_state_vector(t_initial_state)),
+      state_weights_(t_particle_counts, 1.0 / static_cast<double>(t_particle_counts)) {}
 
-  explicit ParticleFilter(State t_initial_state, std::size_t const t_max_particle = DEFAULT_MAX_PARTICLE_COUNTS)
-    : previous_states_(t_max_particle, to_state_vector(t_initial_state)),
-      state_weights_(t_max_particle, 1.0 / static_cast<double>(t_max_particle)) {}
+  explicit ParticleFilter(std::size_t const t_particle_counts)
+    : previous_states_(t_particle_counts),
+      state_weights_(t_particle_counts, 1.0 / static_cast<double>(t_particle_counts)) {}
 
   ParticleFilter(ParticleFilter const&)     = default;
   ParticleFilter(ParticleFilter&&) noexcept = default;
@@ -89,16 +87,19 @@ class ParticleFilter : public ImportanceSampleStrategy, ResampleStrategy {
 
       // we assumed that weight is already normalized here, @todo need to think
       // whether we should make this assumption or not
-      this->filter_updated_ = true;
-      if (++this->sampled_time_ >= this->resample_frequency_) {
-        this->sampled_time_ = 0;
-        this->resample(measurement.get(), this->previous_states_, this->state_weights_);
-      }
+      this->filter_updated_ = true;  // make it true here regardless of resample stage because it might not take place
+      this->resample(measurement.get(), this->previous_states_, this->state_weights_);
     }
 
     StateVector res = StateVector::Zero();
     res = ranges::accumulate(ranges::views::zip(this->previous_states_, this->state_weights_), res, weighted_sum);
     return from_state_vector<State>(res);
+  }
+
+  template <typename T>
+  void set_initial_cond(T const& t_generator) noexcept {
+    ranges::generate(this->previous_states_, t_generator);
+    ranges::fill(this->state_weights_, 1.0 / static_cast<double>(this->previous_states_.size()));
   }
 
   [[nodiscard]] bool filter_updated() const noexcept { return this->filter_updated_; }

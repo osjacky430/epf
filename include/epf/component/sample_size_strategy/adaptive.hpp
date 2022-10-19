@@ -62,14 +62,8 @@ class KLDSampling {
   /* !< Data structure to store histogram */
   epf::KDTree<State, TreeComp> kdtree_;
 
- public:
-  [[nodiscard]] std::size_t max_particle() const noexcept { return this->max_particle_count_; }
-
-  [[nodiscard]] std::size_t min_particle() const noexcept { return this->min_particle_count_; }
-
-  // cluster here is a bit difficult since we remove weight from State, we need to find other way to update weight if
-  // we insert same element into tree
-  void cluster_particles() {}
+ protected:
+  ~KLDSampling() = default;  // prevent base pointer delete via policy class
 
   /**
    *  @brief  This function inserts particle, divided by resolution (a.k.a bin size in our
@@ -97,23 +91,25 @@ class KLDSampling {
                                                static_cast<double>(this->max_particle_count_)));
   }
 
-  KLDSampling() = default;
-  explicit KLDSampling(std::size_t const t_min_particle_count, std::size_t const t_max_particle_count,
-                       State const& t_bin_size, double const t_epsilon = DEFAULT_EPSILON,
-                       double const t_upper_quantile = DEFAULT_UPPER_QUANTILE) noexcept
-    : bin_size_(t_bin_size),
-      epsilon_(t_epsilon),
-      upper_quantile_(t_upper_quantile),
-      min_particle_count_(t_min_particle_count),
-      max_particle_count_(t_max_particle_count) {}
+ public:
+  [[nodiscard]] std::size_t max_particle() const noexcept { return this->max_particle_count_; }
+  [[nodiscard]] std::size_t min_particle() const noexcept { return this->min_particle_count_; }
 
-  /**
-   *  @brief
-   */
-  static double quantile_from_p(double const t_prob) noexcept {
-    assert(0 < t_prob and t_prob < 1);
-    return std::sqrt(2) * boost::math::erf_inv(2 * t_prob - 1);
+  void set_max_particle_count(std::size_t const t_max) noexcept { this->max_particle_count_ = t_max; }
+  void set_min_particle_count(std::size_t const t_min) noexcept { this->min_particle_count_ = t_min; }
+  void set_bin_size(Eigen::Array<double, STATE_DIM, 1> const& t_bin_size) noexcept { this->bin_size_ = t_bin_size; }
+  void set_approximation_error(double const t_epsilon) noexcept { this->epsilon_ = t_epsilon; }
+
+  void set_upper_quantile_from_prob(double const t_prob) noexcept {
+    double const p        = t_prob > 0.5 ? t_prob : 1.0 - t_prob;
+    this->upper_quantile_ = std::sqrt(2) * boost::math::erf_inv(2 * p - 1);
   }
+
+  // cluster here is a bit difficult since we remove weight from State, we need to find other way to update weight if
+  // we insert same element into tree
+  void cluster_particles() {}
+
+  KLDSampling() = default;
 };
 
 }  // namespace epf

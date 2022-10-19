@@ -1,7 +1,8 @@
 #ifndef RESIDUAL_RESAMPLER_HPP_
 #define RESIDUAL_RESAMPLER_HPP_
 
-#include "epf/component/resampler/multinomial.hpp"
+#include "epf/component/resampler/algorithm/multinomial.hpp"
+#include "epf/component/resampler/scheme/always.hpp"
 #include "epf/core/measurement.hpp"
 #include "epf/core/state.hpp"
 #include <cmath>
@@ -16,7 +17,7 @@
 namespace epf {
 
 template <typename State>
-class ResidualResample {
+class Residual {
   using StateVector = typename StateTraits<State>::ArithmeticType;
 
   std::size_t resample_num_ = 0; /*!< The minimum amount of particle left after resampling, value 0 means that particle
@@ -25,8 +26,8 @@ class ResidualResample {
  public:
   void set_resample_size(std::size_t t_n) noexcept { this->resample_num_ = t_n; }
 
-  void resample(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,
-                std::vector<double>& t_weight) noexcept {
+  void resample_impl(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,
+                     std::vector<double>& t_weight) noexcept {
     std::size_t const N = this->resample_num_ != 0 ? this->resample_num_ : t_previous_particles.size();
 
     std::vector<double> child_count = t_weight;
@@ -39,7 +40,7 @@ class ResidualResample {
       ranges::fill_n(ranges::back_inserter(resampled_state), child_count, state);
     }
 
-    if (MultinomialResample<State> sir; N > resampled_state.size()) {
+    if (Multinomial<State> sir; N > resampled_state.size()) {
       auto const Nt_comp = N - resampled_state.size();
 
       std::vector<double> new_weights = t_weight;
@@ -48,7 +49,7 @@ class ResidualResample {
       }
 
       sir.set_resample_size(Nt_comp);
-      sir.resample(nullptr, t_previous_particles, new_weights);
+      sir.resample_impl(nullptr, t_previous_particles, new_weights);
       resampled_state.insert(resampled_state.end(), std::make_move_iterator(t_previous_particles.begin()),
                              std::make_move_iterator(t_previous_particles.end()));
     }
@@ -57,6 +58,9 @@ class ResidualResample {
     t_weight             = std::vector<double>(N, 1.0 / N);  // @todo can we do better?
   }
 };
+
+template <typename State, typename Scheme = AlwaysScheme>
+using ResidualResampler = Resampler<State, Residual<State>, Scheme>;
 
 }  // namespace epf
 

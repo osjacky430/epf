@@ -40,15 +40,16 @@ struct LocationMap {
   virtual ~LocationMap() = default;
 
   using PoseType     = typename Dim::PoseType;
+  using PositionType = typename Dim::PositionType;
   using DistanceType = typename Dim::DistanceType;
   using VectorType   = typename Dim::VectorType;
 
   virtual double distance_to_obstacle(PoseType const& /* t_pose */, DistanceType /* t_max_range */,
                                       VectorType /* t_direciton */) = 0;
 
-  virtual std::vector<PoseType> get_free_cells() = 0;
+  virtual std::vector<PositionType> get_free_cells() = 0;
 
-  virtual bool is_free_cell(PoseType const& /**/) const noexcept = 0;
+  virtual bool is_free_cell(PositionType const& /**/) const noexcept = 0;
 };
 
 template <typename Dim, typename Signature>

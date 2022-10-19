@@ -6,10 +6,9 @@
 #include "epf/core/measurement.hpp"
 #include "epf/core/state.hpp"
 #include "epf/util/math.hpp"
-#include <algorithm>
 #include <boost/concept/usage.hpp>
 #include <cmath>
-#include <optional>
+#include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/view/zip.hpp>
 
 namespace epf {
@@ -90,7 +89,7 @@ class LandmarkModel final : public MeasurementModel<State> {
       weight_sum += weight;
     }
 
-    std::for_each(t_weight.begin(), t_weight.end(), [weight_sum](auto& t_val) { t_val /= weight_sum; });
+    ranges::for_each(t_weight, [weight_sum](auto& t_val) { t_val /= weight_sum; });
 
     return MeasurementResult::Updated;
   }

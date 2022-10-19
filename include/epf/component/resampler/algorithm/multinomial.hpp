@@ -1,10 +1,10 @@
 #ifndef MULTINOMIAL_RESAMPLER_HPP_
 #define MULTINOMIAL_RESAMPLER_HPP_
 
+#include "epf/component/resampler/resampler.hpp"
 #include "epf/core/measurement.hpp"
 #include "epf/core/state.hpp"
 #include "epf/util/math.hpp"
-#include <algorithm>
 #include <random>
 #include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/view/zip.hpp>
@@ -19,7 +19,7 @@ namespace epf {
  *  Gordon 1994
  */
 template <typename State>
-class MultinomialResample {
+class Multinomial {
   using StateVector = typename StateTraits<State>::ArithmeticType;
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
 
@@ -28,8 +28,8 @@ class MultinomialResample {
  public:
   void set_resample_size(std::size_t t_n) noexcept { this->resample_num_ = t_n; }
 
-  void resample(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,
-                std::vector<double>& t_weight) noexcept {
+  void resample_impl(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,
+                     std::vector<double>& t_weight) noexcept {
     std::size_t const sample_count = this->resample_num_ != 0 ? this->resample_num_ : t_previous_particles.size();
 
     auto const cumulative_weight = calculate_cumulative_weight(t_weight);
@@ -56,6 +56,9 @@ class MultinomialResample {
     t_weight             = std::move(state_weight);
   }
 };
+
+template <typename State, typename Scheme>
+using MultinomialResampler = Resampler<State, Multinomial<State>, Scheme>;
 
 }  // namespace epf
 

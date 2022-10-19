@@ -9,6 +9,7 @@
 #include <matplot/matplot.h>
 #endif
 
+#include "epf/app/common.hpp"
 #include "epf/core/particle_filter.hpp"
 #include "pf_sim_cfg.hpp"
 #include "time_series.hpp"
@@ -33,7 +34,7 @@ int main(int /**/, char** /**/) {
   using namespace time_series;
 
   Simulator<F> simulator{F::State{1.0}, TIME_STEP, 1};
-  auto pf = std::get<0>(simulator.create_particle_filter<epf::ParticleFilter<F::State>>(PARTICLE_COUNT));
+  auto pf = std::get<0>(simulator.create_particle_filter<epf::VanillaPF<F::State>>(PARTICLE_COUNT));
 
   double mse = 0.0;
   std::vector<double> estimated_state(1, 1.0);

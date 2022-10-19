@@ -204,6 +204,8 @@ class UKFSampler {
       state  = sampled;
     }
 
+    // a bit awkward here, because measurement model needs to be careful not to overwrite the weight, i.e., no pure
+    // assignment, need *= instead
     t_meas->update(t_prev, t_weight);
 
     return SamplingResult::Sampled;

@@ -1,6 +1,7 @@
 #ifndef ADAPTIVE_RESAMPLER_HPP_
 #define ADAPTIVE_RESAMPLER_HPP_
 
+#include "epf/component/resampler/resampler.hpp"
 #include "epf/core/measurement.hpp"
 #include "epf/util/math.hpp"
 #include <algorithm>
@@ -12,7 +13,7 @@ namespace epf {
 
 // augmented, with w_slow and w_fast to solve robot kidnapping
 template <typename State, template <typename...> typename ParticleSizeStrategy, typename... SizeStrategyTParam>
-class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
+class Adaptive : public ParticleSizeStrategy<State, SizeStrategyTParam...> {
   double w_slow_ = 0.0; /*!< long term average */
   double w_fast_ = 0.0; /*!< short term average */
 
@@ -21,15 +22,15 @@ class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
   double alpha_slow_ = DEFAULT_ALPHA_SLOW; /*!< cut off frequency (?) for long term average */
   double alpha_fast_ = DEFAULT_ALPHA_FAST; /*!< cut off frequency (?) for short term average */
 
- public:
   using ParticleSizeStrategy<State>::calculate_particle_size;
 
+ public:
   // The algorithm requires alph_slow << alpha_fast
   static constexpr auto DEFAULT_ALPHA_SLOW = 0.001;
   static constexpr auto DEFAULT_ALPHA_FAST = 0.1;
 
-  explicit AdaptiveResample(double const t_alpha_slow = DEFAULT_ALPHA_SLOW,
-                            double const t_alpha_fast = DEFAULT_ALPHA_FAST) noexcept
+  explicit Adaptive(double const t_alpha_slow = DEFAULT_ALPHA_SLOW,
+                    double const t_alpha_fast = DEFAULT_ALPHA_FAST) noexcept
     : alpha_slow_(t_alpha_slow), alpha_fast_(t_alpha_fast) {
     assert(t_alpha_fast / t_alpha_slow >= 100.0);
   }
@@ -37,11 +38,12 @@ class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
   void set_alpha_slow(double const t_new_value) noexcept { this->alpha_slow_ = t_new_value; }
   void set_alpha_fast(double const t_new_value) noexcept { this->alpha_fast_ = t_new_value; }
 
-  void resample(epf::MeasurementModel<State>* const t_meas_model, std::vector<State>& t_previous_particles,
-                std::vector<double>& t_weight) noexcept {
+  void resample_impl(epf::MeasurementModel<State>* const t_meas_model, std::vector<State>& t_previous_particles,
+                     std::vector<double>& t_weight) noexcept {
     auto const w_sum = std::accumulate(t_weight.begin(), t_weight.end(), 0.0);
     auto const w_avg = w_sum / static_cast<double>(t_weight.size());
 
+    // handle w_slow = 0 or w_fast = 0
     this->w_slow_ += this->alpha_slow_ * (w_avg - this->w_slow_);
     this->w_fast_ += this->alpha_fast_ * (w_avg - this->w_fast_);
 
@@ -89,6 +91,10 @@ class AdaptiveResample : ParticleSizeStrategy<State, SizeStrategyTParam...> {
     t_weight             = std::move(resampled_weight);
   }
 };
+
+// @todo don't like this, need to think about how to inject template param, or better interface (?)
+template <typename State, template <typename...> typename T, typename Scheme, typename... SizeStratTParam>
+using AdaptiveResampler = Resampler<State, Adaptive<State, T, SizeStratTParam...>, Scheme>;
 
 }  // namespace epf
 

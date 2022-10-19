@@ -5,8 +5,8 @@
 #include "epf/core/measurement.hpp"
 #include "epf/core/state.hpp"
 #include <boost/math/constants/constants.hpp>
-#include <optional>
 #include <random>
+#include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/view/zip.hpp>
 
 namespace epf {
@@ -98,7 +98,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
       };
 
       // TODO: do beam skip
-      std::for_each(income_meas.raw_measurements_.begin(), income_meas.raw_measurements_.end(), estimate_per_beam);
+      ranges::for_each(income_meas.raw_measurements_, estimate_per_beam);
 
       // Assuming the states correspond to a Marcov process, and the observations are conditionally independent given
       // the states, w_{t} can be derived from w_{t-1}
@@ -106,7 +106,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
       weight_sum += weight;
     }
 
-    std::for_each(t_weight.begin(), t_weight.end(), [=](auto& t_v) { t_v /= weight_sum; });
+    ranges::for_each(t_weight, [=](auto& t_v) { t_v /= weight_sum; });
 
     this->latest_measurement_ = income_meas; /* std::move(income_meas) */
     return MeasurementResult::Updated;
@@ -137,7 +137,6 @@ class LaserBeamModel final : public MeasurementModel<State> {
 
       auto const diff = t_laser_data.first - theoretical_range;
 
-      // TODO: investigate why no normalization needed
       auto const p_hit   = std::exp(-(diff * diff) / 2.0 * this->sigma_hit_ * this->sigma_hit_);
       auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * t_laser_data.first);
       auto const p_max   = static_cast<int>(t_laser_data.first == this->max_range_);
@@ -150,8 +149,7 @@ class LaserBeamModel final : public MeasurementModel<State> {
       weight *= p;
     };
 
-    std::for_each(this->latest_measurement_.raw_measurements_.begin(),
-                  this->latest_measurement_.raw_measurements_.end(), estimate_per_beam);
+    ranges::for_each(this->latest_measurement_.raw_measurements_, estimate_per_beam);
 
     return {particle, weight};
   }

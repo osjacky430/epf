@@ -1,7 +1,10 @@
 #ifndef AMCL_HPP_
 #define AMCL_HPP_
 
-#include "epf/component/resampler/adaptive.hpp"
+#include "epf/component/importance_sampler/default.hpp"
+#include "epf/component/resampler/algorithm/adaptive.hpp"
+#include "epf/component/resampler/resampler.hpp"
+#include "epf/component/resampler/scheme/always.hpp"
 #include "epf/component/sample_size_strategy/adaptive.hpp"
 #include "epf/core/particle_filter.hpp"
 #include "epf/util/traits.hpp"
@@ -57,9 +60,8 @@ inline double& w_coor<Particle>(Eigen::Vector3d& t_arr) {
 //     return Pose{Eigen::Array3d{transformed[0], transformed[1], std::atan2(std::sin(angle), std::cos(angle))}};
 //  }
 
-template <typename State = Particle, typename ImportanceSampler = DefaultSampler<State>,
-          typename Resampler = AdaptiveResample<State, KLDSampling>>
-using AMCL2D = epf::ParticleFilter<State, ImportanceSampler, Resampler>;
+template <typename State = Particle, typename ImportanceSampler = DefaultSampler<State>>
+using AMCL2D = epf::ParticleFilter<State, ImportanceSampler, AdaptiveResampler<State, KLDSampling, AlwaysScheme>>;
 
 }  // namespace epf
 
