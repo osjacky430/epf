@@ -1,16 +1,18 @@
-# EPF - Extendable Particle Filter
+# EPF - Extendable Particle Filter <!-- omit in toc -->
 
 Particle filter has been studied since 20th century. Various improvements are proposed to solve the challenges encountered when applying the filter to real world problems. The main purpose of EPF is to try to implement particle filter in a composable manner, such that it is trivial to change a certain part of particle filter to suit one's need, from adding additional measurement model, to adopting different strategy for resampling step.
 
-# Table of content
-- [Table of content](#table-of-content)
+# Table of content <!-- omit in toc -->
 - [Terminologies](#terminologies)
   - [State-Space Model](#state-space-model)
   - [Particle Filter](#particle-filter)
     - [Importance Sampling](#importance-sampling)
     - [Resampling](#resampling)
-  - [Particle (State) Concept](#particle-state-concept)
+    - [Resample-Move](#resample-move)
 - [Getting Started](#getting-started)
+  - [Dependencies](#dependencies)
+  - [Install and run](#install-and-run)
+- [How To EPF](#how-to-epf)
 - [TODO](#todo)
 - [Reference](#reference)
 
@@ -66,17 +68,42 @@ The implementation of the proposal distribution is under directory `component\im
 
 ### Resampling
 
-Importance sampling along can't do much since it will degenerate with time (see THE UNSCENTED PARTICLE FILTER), luckily, with the inclusion of resampling stage, particle filter is finally a practical filter. The basic idea is that, resampling stage draws particle from importance sampling according to their importance weight, i.e., particles with higher weights will stay, whereas lower one will be discarded (kinda like the Darwinian idea of survival of the fittest). Different resampling strategies may affect the "performace" of the particle filter (though the author in THE UNSCENTED PARTICLE FILTER found that those do not affect the "performace" of it). Nevertheless, EPF implements different resampling strategy under directory `component\resampler`, the default strategy uses multinomial sampling. (see reference)
+Importance sampling along can't do much since it will degenerate with time (see THE UNSCENTED PARTICLE FILTER), luckily, with the inclusion of resampling stage, particle filter is finally a practical filter. The basic idea is that, resampling stage draws particle from importance sampling according to their importance weight, as the result, particles with higher weights will stay, whereas lower one will be discarded (kinda like the Darwinian idea of survival of the fittest). Different resampling strategies may affect the "performace" of the particle filter (though the author in THE UNSCENTED PARTICLE FILTER found that those do not affect the "performace" of it). Nevertheless, EPF implements different resampling strategy under directory `component\resampler`, the default strategy uses multinomial sampling. (see reference)
 
 ### Resample-Move
 
 Resampling stage picks the fittest particles according to importance weight, this means that the resulting particle set may contain multiple copies (or "children" in some literatures) from one particle. This is normally fine because in next iteration, the process noise will kick in, spreading the particles out. However, if the process noise is small... (todo: finish this)
 
-## Particle (State) Concept
-
-The Particle Concept describes the requirement for a particle type. The requirements are checked by each component, e.g. `epf::DifferentialDrive`, `epf::ParticleFilter`. Refer to each component for actual requirement.
-
 # Getting Started
+
+These instructions will get you a copy of the package up and running on your machine.
+
+## Dependencies
+
+The following libraries are used for EPF (see `cmake\Conan.cmake`), make sure EPF can find them in order to build it:
+
+- range-v3/0.11.0
+- eigen/3.4.0
+- fmt/9.1.0 (example only)
+- Matplot++ (example only)
+- gtest/cci.20210126 (test only)
+
+## Install and run
+
+1. clone the repo to desire directory:
+
+``` sh
+git clone https://github.com/osjacky430/epf
+```
+
+2. build and install the package (todo: finish it)
+
+``` sh
+```
+
+# How To EPF
+
+
 
 # TODO
 1. support multi-thread or coroutine (make example benchmarkable first...)

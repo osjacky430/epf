@@ -5,5 +5,6 @@ target_link_libraries(example_config INTERFACE epf project_option Boost::headers
 target_compile_definitions(example_config INTERFACE $<${Matplot++_FOUND}:HAVE_MATPLOTCPP>)
 
 # add_subdirectory(kdtree)
+add_subdirectory(resampler)
 add_subdirectory(robotics)
 add_subdirectory(time_series)

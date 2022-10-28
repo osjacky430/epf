@@ -1,0 +1,2 @@
+add_executable(resample_algorithm_compare resample_algorithm_compare.cpp)
+target_link_libraries(resample_algorithm_compare PRIVATE example_config)

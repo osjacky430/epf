@@ -20,12 +20,16 @@ namespace epf {
  */
 template <typename State>
 class Multinomial {
-  using StateVector = typename StateTraits<State>::ArithmeticType;
   std::mt19937 rng_ = std::mt19937(std::random_device{}());
 
   std::size_t resample_num_ = 0;
 
  public:
+  Multinomial() = default;
+  explicit Multinomial(std::mt19937 const& t_rng) : rng_(t_rng) {}
+
+  using StateVector = typename StateTraits<State>::ArithmeticType;
+
   void set_resample_size(std::size_t t_n) noexcept { this->resample_num_ = t_n; }
 
   void resample_impl(epf::MeasurementModel<State>* const /**/, std::vector<StateVector>& t_previous_particles,

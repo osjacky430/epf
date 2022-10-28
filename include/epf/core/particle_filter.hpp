@@ -40,14 +40,14 @@ class ParticleFilter : public ImportanceSampleStrategy, public ResampleStrategy 
   using ImportanceSampleStrategy::importance_sampling;
   using ResampleStrategy::resample;
 
-  [[nodiscard]] auto get_all_measurement() const noexcept { return this->sensors_; }  // const& ?
+  [[nodiscard]] auto const& get_all_measurement() const noexcept { return this->sensors_; }
   [[nodiscard]] auto get_process_model() const noexcept { return this->motion_.get(); }
 
  private:
   bool filter_updated_ = false;
 
   std::unique_ptr<ProcessModel<State>> motion_{};
-  std::vector<std::shared_ptr<MeasurementModel<State>>> sensors_{};  // TODO: change to unique_ptr
+  std::vector<std::unique_ptr<MeasurementModel<State>>> sensors_{};
 
   std::vector<typename StateTrait::ArithmeticType> previous_states_{};
   std::vector<double> state_weights_{};
@@ -104,10 +104,14 @@ class ParticleFilter : public ImportanceSampleStrategy, public ResampleStrategy 
 
   [[nodiscard]] bool filter_updated() const noexcept { return this->filter_updated_; }
 
+  [[nodiscard]] bool filter_resampled() const noexcept {
+    return this->filter_updated_ and ResampleStrategy::filter_resampled();
+  }
+
   template <typename Measurement, typename... InitArg>
   Measurement* add_measurement_model(InitArg&&... args) noexcept {
     static_assert(ImportanceSampleStrategy::template require_meas_model<Measurement>);
-    this->sensors_.push_back(std::make_shared<Measurement>(std::forward<InitArg>(args)...));
+    this->sensors_.push_back(std::make_unique<Measurement>(std::forward<InitArg>(args)...));
 
     return static_cast<Measurement*>(this->sensors_.back().get());
   }

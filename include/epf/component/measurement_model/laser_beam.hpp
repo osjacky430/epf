@@ -1,6 +1,7 @@
 #ifndef LASER_BEAM_HPP_
 #define LASER_BEAM_HPP_
 
+#include "epf/component/concept/laser.hpp"
 #include "epf/component/misc/map.hpp"
 #include "epf/core/measurement.hpp"
 #include "epf/core/state.hpp"
@@ -12,7 +13,6 @@
 namespace epf {
 
 struct BeamModelParam {
-  double max_range_;
   double z_hit_;
   double sigma_hit_;
   double z_short_;
@@ -54,13 +54,26 @@ class LaserBeamModel final : public MeasurementModel<State> {
   double z_max_  = 0.0; /*!< Failures */
   double z_rand_ = 0.0; /*!< Random measurements*/
 
+  BOOST_CONCEPT_ASSERT((LaserDataConcept<SensorData>));
+
  public:
+  void set_max_range(double const t_max_range) { this->max_range_ = t_max_range; }
+
+  void update_sensor_model(BeamModelParam const& t_param) {
+    this->z_hit_        = t_param.z_hit_;
+    this->sigma_hit_    = t_param.sigma_hit_;
+    this->z_short_      = t_param.z_short_;
+    this->lambda_short_ = t_param.lambda_short_;
+    this->z_max_        = t_param.z_max_;
+    this->z_rand_       = t_param.z_rand_;
+  }
+
   void attach_sensor(Measurement<SensorData>* t_sensor) noexcept { this->sensor_ = t_sensor; }
   void attach_map(LocationMap<Dimension<2>>* t_map) noexcept { this->map_ = t_map; }
 
   LaserBeamModel() = default;
-  explicit LaserBeamModel(BeamModelParam const t_param)
-    : max_range_{t_param.max_range_},
+  explicit LaserBeamModel(double const t_max_range, BeamModelParam const& t_param)
+    : max_range_{t_max_range},
       z_hit_{t_param.z_hit_},
       sigma_hit_{t_param.sigma_hit_},
       z_short_{t_param.z_short_},
@@ -72,6 +85,8 @@ class LaserBeamModel final : public MeasurementModel<State> {
    *  @brief
    */
   MeasurementResult update(std::vector<StateVector>& t_states, std::vector<double>& t_weight) override {
+    using ranges::views::zip;
+
     double weight_sum      = 0.0;
     SensorData income_meas = this->sensor_->get_measurement();
     for (auto [state, weight] : ranges::views::zip(t_states, t_weight)) {
@@ -79,15 +94,16 @@ class LaserBeamModel final : public MeasurementModel<State> {
       auto const laser_pose   = transform_coordinate(state, this->laser_pose_);  // find laser position in map
 
       auto const estimate_per_beam = [&](auto const& t_laser_data) {
+        auto const [range, bearing] = t_laser_data;
         // TODO: generate unit vector from rpy or quaternion (add constraint to SensorData)
-        std::array<double, 3> const unit_vector = {std::cos(t_laser_data.second), std::sin(t_laser_data.second), 0};
+        std::array<double, 3> const unit_vector = {std::cos(bearing), std::sin(bearing), 0};
         auto const theoretical_range = this->map_->distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
 
-        auto const diff = t_laser_data.first - theoretical_range;
+        auto const diff = range - theoretical_range;
 
         auto const p_hit   = std::exp(-(diff * diff) / 2.0 * this->sigma_hit_ * this->sigma_hit_);
-        auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * t_laser_data.first);
-        auto const p_max   = static_cast<int>(t_laser_data.first >= this->max_range_);
+        auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * range);
+        auto const p_max   = static_cast<int>(range >= this->max_range_);
         auto const p_rand  = 1.0 / this->max_range_;
 
         // importance factor for this measurement
@@ -98,7 +114,8 @@ class LaserBeamModel final : public MeasurementModel<State> {
       };
 
       // TODO: do beam skip
-      ranges::for_each(income_meas.raw_measurements_, estimate_per_beam);
+      ranges::for_each(zip(range_data(this->latest_measurement_), bearing_data(this->latest_measurement_)),
+                       estimate_per_beam);
 
       // Assuming the states correspond to a Marcov process, and the observations are conditionally independent given
       // the states, w_{t} can be derived from w_{t-1}
@@ -132,14 +149,15 @@ class LaserBeamModel final : public MeasurementModel<State> {
     auto const laser_pose = transform_coordinate(particle.value_, this->laser_pose_);  // find laser position in map
 
     auto const estimate_per_beam = [&](auto const& t_laser_data) {
-      auto const unit_vector       = std::array{std::cos(t_laser_data.second), std::sin(t_laser_data.first), 0.0};
+      auto const [range, bearing]  = t_laser_data;
+      auto const unit_vector       = std::array{std::cos(bearing), std::sin(range), 0.0};
       auto const theoretical_range = this->map_->distance_to_obstacle(laser_pose, this->max_range_, unit_vector);
 
-      auto const diff = t_laser_data.first - theoretical_range;
+      auto const diff = range - theoretical_range;
 
       auto const p_hit   = std::exp(-(diff * diff) / 2.0 * this->sigma_hit_ * this->sigma_hit_);
-      auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * t_laser_data.first);
-      auto const p_max   = static_cast<int>(t_laser_data.first == this->max_range_);
+      auto const p_short = this->lambda_short_ * std::exp(-this->lambda_short_ * range);
+      auto const p_max   = static_cast<int>(range == this->max_range_);
       auto const p_rand  = 1.0 / this->max_range_;
 
       // importance factor for this measurement
@@ -149,7 +167,8 @@ class LaserBeamModel final : public MeasurementModel<State> {
       weight *= p;
     };
 
-    ranges::for_each(this->latest_measurement_.raw_measurements_, estimate_per_beam);
+    ranges::for_each(ranges::views::zip(range_data(this->latest_measurement_), bearing_data(this->latest_measurement_)),
+                     estimate_per_beam);
 
     return {particle, weight};
   }
