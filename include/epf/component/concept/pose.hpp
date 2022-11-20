@@ -6,6 +6,15 @@
 
 namespace epf {
 
+template <typename State, typename Tag = typename State::TagType>
+typename State::ValueType& x_coor(typename StateTraits<State>::ArithmeticType&);
+
+template <typename State, typename Tag = typename State::TagType>
+typename State::ValueType& y_coor(typename StateTraits<State>::ArithmeticType&);
+
+template <typename State, typename Tag = typename State::TagType>
+typename State::ValueType& w_coor(typename StateTraits<State>::ArithmeticType&);
+
 // optional concept?! sfinae?
 // temporary, not sure if this is the best api
 template <typename State>

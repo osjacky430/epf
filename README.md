@@ -99,6 +99,10 @@ git clone https://github.com/osjacky430/epf
 2. build and install the package (todo: finish it)
 
 ``` sh
+cd epf
+cmake -S . -B build
+cmake --build build
+cmake --install ./build --prefix <directory_to_install_to> --config <config type, e.g. Debug>
 ```
 
 # How To EPF
@@ -113,6 +117,7 @@ git clone https://github.com/osjacky430/epf
 5. more example
 6. need to understand prng in c++ library (am I using it correctly?)
 7. high dimensional state benchmarking (?)
+8. add cmake preset
 
 # Reference
 1. particle-filter-tutorial

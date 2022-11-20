@@ -52,15 +52,6 @@ State from_state_vector(typename StateTraits<State>::ArithmeticType const&);
 template <typename State, typename Tag = typename State::TagType>
 typename StateTraits<State>::ArithmeticType to_state_vector(State const&);
 
-template <typename State, typename Tag = typename State::TagType>
-typename State::ValueType& x_coor(typename StateTraits<State>::ArithmeticType&);
-
-template <typename State, typename Tag = typename State::TagType>
-typename State::ValueType& y_coor(typename StateTraits<State>::ArithmeticType&);
-
-template <typename State, typename Tag = typename State::TagType>
-typename State::ValueType& w_coor(typename StateTraits<State>::ArithmeticType&);
-
 template <typename State>
 struct BasicStateConcept {  // NOLINT(*-special-member-functions), because this class is not meant to be instantiated
   BOOST_CONCEPT_USAGE(BasicStateConcept) {
